@@ -1,0 +1,244 @@
+/* PDF Styles for Investment Proposal */
+
+/* Global Styles */
+body {
+  font-family: 'Helvetica', 'Arial', sans-serif;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #333;
+  margin: 0;
+  padding: 3cm 0 2.5cm 0; /* Increased top and bottom padding to accommodate header and footer */
+}
+
+/* Headings */
+h1 {
+  font-size: 20px;
+  color: #1a5276;
+  margin-top: 20px;
+  margin-bottom: 15px;
+  page-break-after: avoid;
+  border-bottom: 1px solid #3498db;
+  padding-bottom: 5px;
+}
+
+h2 {
+  font-size: 16px;
+  color: #2874a6;
+  margin-top: 15px;
+  margin-bottom: 10px;
+  page-break-after: avoid;
+}
+
+h3 {
+  font-size: 14px;
+  color: #3498db;
+  margin-top: 12px;
+  margin-bottom: 8px;
+  page-break-after: avoid;
+}
+
+/* Paragraphs */
+p {
+  margin-top: 0;
+  margin-bottom: 10px;
+}
+
+/* Lists */
+ul, ol {
+  margin-top: 10px;
+  margin-bottom: 10px;
+  padding-left: 25px;
+}
+
+li {
+  margin-bottom: 5px;
+}
+
+/* Table styles - IMPORTANT for proper table formatting */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 15px 0;
+  page-break-inside: avoid;
+  font-size: 11px;
+  border: 1px solid #1a5276;
+}
+
+th {
+  background-color: #2874a6;
+  color: white;
+  padding: 10px 8px;
+  font-weight: bold;
+  text-align: left;
+  border: 1px solid #1a5276;
+}
+
+td {
+  padding: 8px;
+  border: 1px solid #bbb;
+  vertical-align: top;
+}
+
+tr:nth-child(even) {
+  background-color: #ecf0f1;
+}
+
+/* Force table headers to have the right appearance */
+thead tr {
+  background-color: #2874a6 !important;
+}
+
+thead th {
+  font-weight: bold;
+  background-color: #2874a6;
+  color: white;
+  border: 1px solid #1a5276;
+}
+
+/* Special formatting for the asset allocation section */
+.asset-allocation-table {
+  margin: 20px 0;
+}
+
+.asset-allocation-table table {
+  border: 2px solid #1a5276;
+}
+
+.asset-allocation-table th {
+  background-color: #2874a6;
+  color: white;
+  text-align: left;
+  font-weight: bold;
+  padding: 10px;
+}
+
+.asset-allocation-table td {
+  padding: 8px 10px;
+}
+
+/* Right-align currency amounts */
+tr td:last-child:not(:first-child),
+tr th:last-child:not(:first-child) {
+  text-align: right;
+}
+
+/* Bold text */
+strong, b {
+  font-weight: bold;
+}
+
+/* Page break control */
+.page-break {
+  page-break-after: always;
+}
+
+/* Avoid orphan headings */
+h1, h2, h3, h4, h5, h6 {
+  page-break-after: avoid;
+}
+
+/* Image alignment */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Code blocks */
+pre, code {
+  font-family: monospace;
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  padding: 10px;
+  margin: 10px 0;
+  font-size: 10px;
+  white-space: pre-wrap;
+}
+
+/* Blockquotes */
+blockquote {
+  border-left: 3px solid #ccc;
+  margin-left: 10px;
+  padding-left: 15px;
+  color: #666;
+}
+
+/* Make amounts right-aligned */
+.currency {
+  text-align: right;
+}
+
+/* Total row styling */
+tr.total-row td {
+  font-weight: bold;
+  border-top: 2px solid #1a5276;
+  background-color: #d6eaf8;
+}
+
+/* Adjust column widths for asset allocation tables */
+.asset-allocation-table th:first-child {
+  width: 30%;
+}
+
+.asset-allocation-table th:nth-child(2) {
+  width: 40%;
+}
+
+.asset-allocation-table th:nth-child(3) {
+  width: 30%;
+}
+
+/* Special styling for nested items in asset allocation tables */
+.asset-allocation-table tr td:first-child:not([colspan]) {
+  padding-left: 10px;
+  font-weight: bold;
+}
+
+.asset-allocation-table tr td:nth-child(2):empty + td {
+  font-weight: bold;
+}
+
+/* Indent the sub-items under each asset class */
+.asset-allocation-table tr td:nth-child(1):empty {
+  border-top: none;
+  border-bottom: none;
+}
+
+.asset-allocation-table tr td:nth-child(2):not(:empty) {
+  padding-left: 20px;
+}
+
+/* Total row styling */
+.asset-allocation-table tr:last-child td {
+  border-top: 2px solid #1a5276;
+  font-weight: bold;
+  background-color: #d6eaf8;
+}
+
+/* Investment products table styling */
+.investment-products-table {
+  margin: 20px 0;
+}
+
+.investment-products-table table {
+  border: 2px solid #1a5276;
+  width: 80%;
+  margin-left: 20px;
+}
+
+.investment-products-table th {
+  background-color: #2874a6;
+  color: white;
+  text-align: left;
+  font-weight: bold;
+  padding: 10px;
+  border: 1px solid #1a5276;
+}
+
+.investment-products-table td {
+  padding: 8px 10px;
+  border: 1px solid #bbb;
+}
+
+.investment-products-table tr:nth-child(even) {
+  background-color: #ecf0f1;
+} 

@@ -1,0 +1,454 @@
+{
+  "equity": {
+    "mutualFunds": {
+      "conservative": [
+        {
+          "name": "HDFC Top 100 Fund",
+          "description": "Large-cap fund investing in top 100 companies by market capitalization",
+          "expectedReturn": "10-12%",
+          "risk": "Moderate",
+          "lockInPeriod": "None"
+        },
+        {
+          "name": "ICICI Prudential Bluechip Fund",
+          "description": "Large-cap fund with focus on blue-chip companies",
+          "expectedReturn": "10-12%",
+          "risk": "Moderate",
+          "lockInPeriod": "None"
+        },
+        {
+          "name": "SBI Dividend Yield Fund",
+          "description": "Focuses on companies with consistent dividend history",
+          "expectedReturn": "9-11%",
+          "risk": "Moderate-Low",
+          "lockInPeriod": "None"
+        }
+      ],
+      "moderate": [
+        {
+          "name": "Kotak Flexicap Fund",
+          "description": "Diversified portfolio across market caps",
+          "expectedReturn": "12-14%",
+          "risk": "Moderate",
+          "lockInPeriod": "None"
+        },
+        {
+          "name": "Axis Focused 25 Fund",
+          "description": "Concentrated portfolio of 25 stocks across market caps",
+          "expectedReturn": "13-15%",
+          "risk": "Moderate-High",
+          "lockInPeriod": "None"
+        },
+        {
+          "name": "Parag Parikh Flexi Cap Fund",
+          "description": "Diversified portfolio with global exposure",
+          "expectedReturn": "12-15%",
+          "risk": "Moderate",
+          "lockInPeriod": "None"
+        }
+      ],
+      "aggressive": [
+        {
+          "name": "SBI Small Cap Fund",
+          "description": "Focus on small-cap companies with high growth potential",
+          "expectedReturn": "15-18%",
+          "risk": "Very High",
+          "lockInPeriod": "None"
+        },
+        {
+          "name": "Kotak Small Cap Fund",
+          "description": "Invests in small-cap companies with growth potential",
+          "expectedReturn": "15-18%",
+          "risk": "Very High",
+          "lockInPeriod": "None"
+        },
+        {
+          "name": "Axis Midcap Fund",
+          "description": "Focus on mid-cap companies with growth potential",
+          "expectedReturn": "14-16%",
+          "risk": "High",
+          "lockInPeriod": "None"
+        },
+        {
+          "name": "ICICI Prudential Technology Fund",
+          "description": "Sectoral fund focusing on technology companies",
+          "expectedReturn": "15-20%",
+          "risk": "Very High",
+          "lockInPeriod": "None"
+        }
+      ]
+    },
+    "pms": {
+      "conservative": [
+        {
+          "name": "ASK Indian Entrepreneur Portfolio",
+          "description": "Focus on established businesses with entrepreneurial management",
+          "expectedReturn": "12-14%",
+          "risk": "Moderate",
+          "lockInPeriod": "1 year",
+          "minimumInvestment": "50 Lakhs"
+        },
+        {
+          "name": "Motilal Oswal Value Strategy",
+          "description": "Value investing approach with focus on quality companies",
+          "expectedReturn": "12-14%",
+          "risk": "Moderate",
+          "lockInPeriod": "1 year",
+          "minimumInvestment": "50 Lakhs"
+        }
+      ],
+      "moderate": [
+        {
+          "name": "Marcellus Consistent Compounder",
+          "description": "Focus on companies with sustainable competitive advantages",
+          "expectedReturn": "14-16%",
+          "risk": "Moderate-High",
+          "lockInPeriod": "1 year",
+          "minimumInvestment": "50 Lakhs"
+        },
+        {
+          "name": "IIFL Multicap Strategy",
+          "description": "Diversified portfolio across market caps",
+          "expectedReturn": "14-16%",
+          "risk": "Moderate-High",
+          "lockInPeriod": "1 year",
+          "minimumInvestment": "50 Lakhs"
+        }
+      ],
+      "aggressive": [
+        {
+          "name": "Sameeksha Capital Equity Fund",
+          "description": "Concentrated portfolio of high-conviction ideas",
+          "expectedReturn": "16-20%",
+          "risk": "High",
+          "lockInPeriod": "1 year",
+          "minimumInvestment": "50 Lakhs"
+        },
+        {
+          "name": "Carnelian Capital Core Growth Strategy",
+          "description": "Focus on emerging businesses with high growth potential",
+          "expectedReturn": "16-20%",
+          "risk": "High",
+          "lockInPeriod": "1 year",
+          "minimumInvestment": "50 Lakhs"
+        }
+      ]
+    },
+    "aif": {
+      "conservative": [
+        {
+          "name": "IIFL Long Term Value Fund",
+          "description": "Value investing approach with long-term horizon",
+          "expectedReturn": "13-15%",
+          "risk": "Moderate-High",
+          "lockInPeriod": "3 years",
+          "minimumInvestment": "1 Crore"
+        },
+        {
+          "name": "Motilal Oswal Long Term Equity Fund",
+          "description": "Long-term buy and hold strategy",
+          "expectedReturn": "13-15%",
+          "risk": "Moderate-High",
+          "lockInPeriod": "3 years",
+          "minimumInvestment": "1 Crore"
+        }
+      ],
+      "moderate": [
+        {
+          "name": "Avendus Enhanced Return Fund",
+          "description": "Combines long-only equity with arbitrage strategies",
+          "expectedReturn": "15-18%",
+          "risk": "High",
+          "lockInPeriod": "3 years",
+          "minimumInvestment": "1 Crore"
+        },
+        {
+          "name": "Edelweiss Special Opportunities Fund",
+          "description": "Focus on special situations and turnarounds",
+          "expectedReturn": "15-18%",
+          "risk": "High",
+          "lockInPeriod": "3 years",
+          "minimumInvestment": "1 Crore"
+        }
+      ],
+      "aggressive": [
+        {
+          "name": "Avendus Absolute Return Fund",
+          "description": "Long-short strategy to capture market opportunities",
+          "expectedReturn": "18-22%",
+          "risk": "Very High",
+          "lockInPeriod": "3 years",
+          "minimumInvestment": "1 Crore"
+        },
+        {
+          "name": "Edelweiss Long Short Fund",
+          "description": "Long-short strategy with focus on alpha generation",
+          "expectedReturn": "18-22%",
+          "risk": "Very High",
+          "lockInPeriod": "3 years",
+          "minimumInvestment": "1 Crore"
+        }
+      ]
+    }
+  },
+  "debt": {
+    "mutualFunds": {
+      "conservative": [
+        {
+          "name": "HDFC Liquid Fund",
+          "description": "Very low risk, high liquidity",
+          "expectedReturn": "5-6%",
+          "risk": "Very Low",
+          "lockInPeriod": "None"
+        },
+        {
+          "name": "Aditya Birla Sun Life Liquid Fund",
+          "description": "Very low risk, high liquidity",
+          "expectedReturn": "5-6%",
+          "risk": "Very Low",
+          "lockInPeriod": "None"
+        },
+        {
+          "name": "Kotak Ultra Short Term Fund",
+          "description": "Low risk, high liquidity",
+          "expectedReturn": "6-7%",
+          "risk": "Low",
+          "lockInPeriod": "None"
+        }
+      ],
+      "moderate": [
+        {
+          "name": "ICICI Prudential Short Term Fund",
+          "description": "Moderate risk, good returns",
+          "expectedReturn": "7-8%",
+          "risk": "Low-Moderate",
+          "lockInPeriod": "None"
+        },
+        {
+          "name": "Axis Banking & PSU Debt Fund",
+          "description": "Focus on high-quality banking and PSU bonds",
+          "expectedReturn": "7-8%",
+          "risk": "Low-Moderate",
+          "lockInPeriod": "None"
+        },
+        {
+          "name": "Kotak Corporate Bond Fund",
+          "description": "Focus on high-quality corporate bonds",
+          "expectedReturn": "7.5-8.5%",
+          "risk": "Moderate",
+          "lockInPeriod": "None"
+        }
+      ],
+      "aggressive": [
+        {
+          "name": "ICICI Prudential Credit Risk Fund",
+          "description": "Higher yield through lower-rated bonds",
+          "expectedReturn": "8-10%",
+          "risk": "High",
+          "lockInPeriod": "None"
+        },
+        {
+          "name": "Aditya Birla Sun Life Credit Risk Fund",
+          "description": "Higher yield through lower-rated bonds",
+          "expectedReturn": "8-10%",
+          "risk": "High",
+          "lockInPeriod": "None"
+        },
+        {
+          "name": "HDFC Dynamic Debt Fund",
+          "description": "Actively managed duration strategy",
+          "expectedReturn": "8-9%",
+          "risk": "Moderate-High",
+          "lockInPeriod": "None"
+        }
+      ]
+    },
+    "direct": {
+      "conservative": [
+        {
+          "name": "Government Securities (G-Secs)",
+          "description": "Sovereign backed securities",
+          "expectedReturn": "6.5-7.5%",
+          "risk": "Very Low",
+          "lockInPeriod": "Varies",
+          "minimumInvestment": "10 Lakhs"
+        },
+        {
+          "name": "Treasury Bills (T-Bills)",
+          "description": "Short-term government securities",
+          "expectedReturn": "5.5-6.5%",
+          "risk": "Very Low",
+          "lockInPeriod": "91/182/364 days",
+          "minimumInvestment": "10 Lakhs"
+        }
+      ],
+      "moderate": [
+        {
+          "name": "AAA Corporate Bonds",
+          "description": "Highest rated corporate bonds",
+          "expectedReturn": "7.5-8.5%",
+          "risk": "Low",
+          "lockInPeriod": "Varies",
+          "minimumInvestment": "10 Lakhs"
+        },
+        {
+          "name": "PSU Bonds",
+          "description": "Bonds issued by public sector undertakings",
+          "expectedReturn": "7.5-8.5%",
+          "risk": "Low",
+          "lockInPeriod": "Varies",
+          "minimumInvestment": "10 Lakhs"
+        }
+      ],
+      "aggressive": [
+        {
+          "name": "AA Corporate Bonds",
+          "description": "High-yield corporate bonds",
+          "expectedReturn": "8.5-9.5%",
+          "risk": "Moderate",
+          "lockInPeriod": "Varies",
+          "minimumInvestment": "10 Lakhs"
+        },
+        {
+          "name": "Commercial Papers (CPs)",
+          "description": "Short-term corporate debt instruments",
+          "expectedReturn": "8-9%",
+          "risk": "Moderate",
+          "lockInPeriod": "Up to 1 year",
+          "minimumInvestment": "10 Lakhs"
+        }
+      ]
+    },
+    "aif": {
+      "conservative": [
+        {
+          "name": "IIFL Yield Enhancer Fund",
+          "description": "Secured lending to established businesses",
+          "expectedReturn": "9-11%",
+          "risk": "Moderate",
+          "lockInPeriod": "3 years",
+          "minimumInvestment": "1 Crore"
+        },
+        {
+          "name": "Avendus Structured Credit Fund",
+          "description": "Structured credit solutions to high-quality companies",
+          "expectedReturn": "9-11%",
+          "risk": "Moderate",
+          "lockInPeriod": "3 years",
+          "minimumInvestment": "1 Crore"
+        }
+      ],
+      "moderate": [
+        {
+          "name": "Edelweiss Real Estate Credit Fund",
+          "description": "Debt financing for real estate projects",
+          "expectedReturn": "12-14%",
+          "risk": "Moderate-High",
+          "lockInPeriod": "4 years",
+          "minimumInvestment": "1 Crore"
+        },
+        {
+          "name": "Kotak Realty Fund",
+          "description": "Debt financing for real estate projects",
+          "expectedReturn": "12-14%",
+          "risk": "Moderate-High",
+          "lockInPeriod": "4 years",
+          "minimumInvestment": "1 Crore"
+        }
+      ],
+      "aggressive": [
+        {
+          "name": "Edelweiss Distressed Assets Fund",
+          "description": "Investments in distressed assets with turnaround potential",
+          "expectedReturn": "15-18%",
+          "risk": "Very High",
+          "lockInPeriod": "5 years",
+          "minimumInvestment": "1 Crore"
+        },
+        {
+          "name": "JM Financial Credit Opportunities Fund",
+          "description": "High-yield debt investments with equity kickers",
+          "expectedReturn": "15-18%",
+          "risk": "Very High",
+          "lockInPeriod": "5 years",
+          "minimumInvestment": "1 Crore"
+        }
+      ]
+    }
+  },
+  "goldSilver": {
+    "etf": [
+      {
+        "name": "Nippon India Gold ETF",
+        "description": "Tracks gold prices",
+        "expectedReturn": "8-10%",
+        "risk": "Moderate",
+        "lockInPeriod": "None"
+      },
+      {
+        "name": "SBI Gold ETF",
+        "description": "Tracks gold prices",
+        "expectedReturn": "8-10%",
+        "risk": "Moderate",
+        "lockInPeriod": "None"
+      },
+      {
+        "name": "ICICI Prudential Silver ETF",
+        "description": "Tracks silver prices",
+        "expectedReturn": "8-12%",
+        "risk": "Moderate-High",
+        "lockInPeriod": "None"
+      }
+    ],
+    "physical": [
+      {
+        "name": "Gold Coins/Bars",
+        "description": "Physical gold investment",
+        "expectedReturn": "8-10%",
+        "risk": "Moderate",
+        "lockInPeriod": "None"
+      },
+      {
+        "name": "Silver Coins/Bars",
+        "description": "Physical silver investment",
+        "expectedReturn": "8-12%",
+        "risk": "Moderate-High",
+        "lockInPeriod": "None"
+      }
+    ]
+  },
+  "insurance": {
+    "term": [
+      {
+        "name": "HDFC Life Click 2 Protect",
+        "description": "Pure term life insurance",
+        "expectedReturn": "N/A",
+        "risk": "N/A",
+        "lockInPeriod": "Annual Renewal"
+      },
+      {
+        "name": "ICICI Prudential iProtect Smart",
+        "description": "Term life insurance with critical illness cover",
+        "expectedReturn": "N/A",
+        "risk": "N/A",
+        "lockInPeriod": "Annual Renewal"
+      }
+    ],
+    "ulip": [
+      {
+        "name": "HDFC Life Click 2 Wealth",
+        "description": "ULIP with multiple fund options",
+        "expectedReturn": "8-12%",
+        "risk": "Varies",
+        "lockInPeriod": "5 years"
+      },
+      {
+        "name": "ICICI Prudential Signature",
+        "description": "Premium ULIP with wealth maximization",
+        "expectedReturn": "8-12%",
+        "risk": "Varies",
+        "lockInPeriod": "5 years"
+      }
+    ]
+  }
+}

@@ -1,0 +1,166 @@
+{
+  "clients": [
+    {
+      "id": "client001",
+      "personalInfo": {
+        "name": "Rajesh Kumar",
+        "age": 42,
+        "maritalStatus": "Married",
+        "dependents": 2,
+        "occupation": "IT Professional",
+        "annualIncome": 2500000,
+        "contactDetails": {
+          "email": "rajesh.kumar@example.com",
+          "phone": "9876543210",
+          "address": "123 Park Street, Mumbai"
+        }
+      },
+      "financialSituation": {
+        "currentInvestments": 3000000,
+        "liabilities": 1500000,
+        "realEstateHoldings": 5000000,
+        "savings": 1000000,
+        "emergencyFundStatus": "Adequate",
+        "monthlyExpenses": 80000,
+        "existingInvestmentProducts": ["Mutual Funds", "Fixed Deposits", "PPF"]
+      },
+      "investmentObjectives": {
+        "primaryGoals": ["Retirement", "Child's Education"],
+        "investmentHorizon": "long_term",
+        "preferredStyle": "balanced",
+        "initialInvestmentAmount": 2000000,
+        "regularContributionAmount": 50000
+      },
+      "riskTolerance": {
+        "marketDropReaction": "buy_some",
+        "maxAcceptableLoss": 15,
+        "returnsVsStabilityPreference": "balanced",
+        "preferredPortfolioStyle": "balanced"
+      },
+      "liquidityNeeds": {
+        "shortTermLiquidity": true,
+        "accessiblePortfolioPercentage": 20
+      },
+      "taxConsiderations": {
+        "taxSavingInvestmentsRequired": true,
+        "taxBracket": "30%"
+      },
+      "knowledgeAndExperience": {
+        "investmentKnowledge": "intermediate",
+        "decisionMakingApproach": "professional_advice"
+      },
+      "behavioralInsights": {
+        "emotionalReaction": "somewhat_concerned",
+        "managementPreference": "automated"
+      }
+    },
+    {
+      "id": "client002",
+      "personalInfo": {
+        "name": "Priya Sharma",
+        "age": 35,
+        "maritalStatus": "Single",
+        "dependents": 0,
+        "occupation": "Doctor",
+        "annualIncome": 3500000,
+        "contactDetails": {
+          "email": "priya.sharma@example.com",
+          "phone": "9876543211",
+          "address": "456 Lake View, Delhi"
+        }
+      },
+      "financialSituation": {
+        "currentInvestments": 2000000,
+        "liabilities": 500000,
+        "realEstateHoldings": 0,
+        "savings": 1500000,
+        "emergencyFundStatus": "Adequate",
+        "monthlyExpenses": 70000,
+        "existingInvestmentProducts": ["Mutual Funds", "Stocks"]
+      },
+      "investmentObjectives": {
+        "primaryGoals": ["Wealth Creation", "Retirement"],
+        "investmentHorizon": "long_term",
+        "preferredStyle": "growth",
+        "initialInvestmentAmount": 1500000,
+        "regularContributionAmount": 75000
+      },
+      "riskTolerance": {
+        "marketDropReaction": "buy_more",
+        "maxAcceptableLoss": 25,
+        "returnsVsStabilityPreference": "mostly_returns",
+        "preferredPortfolioStyle": "aggressive"
+      },
+      "liquidityNeeds": {
+        "shortTermLiquidity": false,
+        "accessiblePortfolioPercentage": 10
+      },
+      "taxConsiderations": {
+        "taxSavingInvestmentsRequired": true,
+        "taxBracket": "30%"
+      },
+      "knowledgeAndExperience": {
+        "investmentKnowledge": "advanced",
+        "decisionMakingApproach": "self_research"
+      },
+      "behavioralInsights": {
+        "emotionalReaction": "not_concerned",
+        "managementPreference": "manual"
+      }
+    },
+    {
+      "id": "client003",
+      "personalInfo": {
+        "name": "Suresh Patel",
+        "age": 58,
+        "maritalStatus": "Married",
+        "dependents": 1,
+        "occupation": "Business Owner",
+        "annualIncome": 5000000,
+        "contactDetails": {
+          "email": "suresh.patel@example.com",
+          "phone": "9876543212",
+          "address": "789 Business Park, Ahmedabad"
+        }
+      },
+      "financialSituation": {
+        "currentInvestments": 10000000,
+        "liabilities": 2000000,
+        "realEstateHoldings": 15000000,
+        "savings": 3000000,
+        "emergencyFundStatus": "Adequate",
+        "monthlyExpenses": 150000,
+        "existingInvestmentProducts": ["Mutual Funds", "Real Estate", "Fixed Deposits", "Stocks"]
+      },
+      "investmentObjectives": {
+        "primaryGoals": ["Retirement", "Wealth Preservation", "Income"],
+        "investmentHorizon": "medium_term",
+        "preferredStyle": "capital_protection",
+        "initialInvestmentAmount": 5000000,
+        "regularContributionAmount": 0
+      },
+      "riskTolerance": {
+        "marketDropReaction": "do_nothing",
+        "maxAcceptableLoss": 10,
+        "returnsVsStabilityPreference": "mostly_stability",
+        "preferredPortfolioStyle": "moderately_conservative"
+      },
+      "liquidityNeeds": {
+        "shortTermLiquidity": true,
+        "accessiblePortfolioPercentage": 30
+      },
+      "taxConsiderations": {
+        "taxSavingInvestmentsRequired": false,
+        "taxBracket": "30%"
+      },
+      "knowledgeAndExperience": {
+        "investmentKnowledge": "advanced",
+        "decisionMakingApproach": "professional_advice"
+      },
+      "behavioralInsights": {
+        "emotionalReaction": "somewhat_concerned",
+        "managementPreference": "automated"
+      }
+    }
+  ]
+}

@@ -286,7 +286,7 @@ function generateProductRecommendationsContent(productRecommendations, initialIn
     const fixedIncomeAmount = Math.round(debtAmount);
     
     let content = `
-${productRecommendations.recommendationSummary || ''}
+${productRecommendations?.recommendationSummary || ''}
 
 ### 1) Mutual Fund: (Target: ₹${formatCurrency(mutualFundAmount)})
 

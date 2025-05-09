@@ -19,6 +19,9 @@ const os = require('os');
 function generateProposal(clientData) {
     const { clientProfile, riskProfile, assetAllocation, productRecommendations } = clientData;
     
+    console.log('generateProposal received assetAllocation:', JSON.stringify(assetAllocation, null, 2));
+    console.log('assetAllocation has detailedAllocation:', !!assetAllocation?.detailedAllocation);
+    
     // Extract client information
     const clientName = clientProfile?.personalInfo?.name || 'Client';
     const clientAge = clientProfile?.personalInfo?.age || 'N/A';
@@ -27,6 +30,24 @@ function generateProposal(clientData) {
     const regularContribution = clientProfile?.investmentObjectives?.regularContributionAmount || 0;
     const investmentHorizon = clientProfile?.investmentObjectives?.investmentHorizon || 'N/A';
     const primaryGoals = clientProfile?.investmentObjectives?.primaryGoals || [];
+    
+    // If we don't have detailed allocation but have risk profile and client profile, generate it
+    if (!assetAllocation?.detailedAllocation && clientProfile && riskProfile) {
+        console.log('No detailed allocation found, regenerating it...');
+        // Get the allocation module
+        const allocation = require('./allocation');
+        
+        // Generate fresh allocation
+        const freshAllocation = allocation.generateAssetAllocation({
+            clientProfile,
+            riskProfile
+        });
+        
+        console.log('Regenerated allocation:', JSON.stringify(freshAllocation, null, 2));
+        
+        // Use the fresh allocation
+        clientData.assetAllocation = freshAllocation;
+    }
     
     // Format date
     const currentDate = new Date();
@@ -50,11 +71,11 @@ function generateProposal(clientData) {
         },
         assetAllocationSummary: {
             title: 'Asset Allocation',
-            content: generateAssetAllocationContent(assetAllocation, initialInvestment)
+            content: generateAssetAllocationContent(clientData.assetAllocation, initialInvestment)
         },
         productDetails: {
             title: 'Investment Products',
-            content: generateProductRecommendationsContent(productRecommendations, initialInvestment, assetAllocation)
+            content: generateProductRecommendationsContent(productRecommendations, initialInvestment, clientData.assetAllocation)
         },
         implementationPlan: {
             title: 'Implementation Plan',
@@ -196,45 +217,123 @@ In the fixed income space, yields have stabilized, and the curve has steepened, 
  * @returns {String} - Markdown content for asset allocation section
  */
 function generateAssetAllocationContent(assetAllocation, initialInvestment) {
-    // Extract allocation percentages
+    console.log('Generating asset allocation content with:', JSON.stringify(assetAllocation, null, 2));
+    console.log('Asset allocation type:', typeof assetAllocation);
+    console.log('Asset allocation keys:', Object.keys(assetAllocation || {}));
+    console.log('Initial investment:', initialInvestment);
+    
+    // Extract allocation percentages for high-level asset classes
     const allocation = assetAllocation?.assetClassAllocation || {};
+    console.log('Asset class allocation:', JSON.stringify(allocation, null, 2));
     
-    // Calculate amounts based on percentages
-    const equityAmount = (allocation.equity / 100) * initialInvestment;
-    const debtAmount = (allocation.debt / 100) * initialInvestment;
-    const goldSilverAmount = (allocation.goldSilver / 100) * initialInvestment;
+    // Get the detailed allocation if available
+    const detailedAllocation = assetAllocation?.detailedAllocation || {};
+    console.log('Detailed allocation present:', Object.keys(detailedAllocation).length > 0 ? 'YES' : 'NO');
+    console.log('Detailed allocation keys:', Object.keys(detailedAllocation));
     
-    // Format all sub-allocations to integers with proper formatting
-    // For equity breakdown
-    const largeCapAmount = Math.round(equityAmount * 0.25);
-    const globalFundAmount = Math.round(equityAmount * 0.15);
-    const hybridFundAmount = Math.round(equityAmount * 0.15);
-    const thematicFundAmount = Math.round(equityAmount * 0.15);
-    const equityETFAmount = Math.round(equityAmount * 0.3);
+    // Convert initial investment to crores for display purposes
+    const investmentInCrores = initialInvestment / 10000000;
+    console.log('Investment in crores:', investmentInCrores);
     
-    // For debt breakdown
-    const debtMFAmount = Math.round(debtAmount * 0.5);
-    const bondAmount = Math.round(debtAmount * 0.5);
+    // Build the detailed allocation table
+    let detailedTable = '';
     
-    // For gold/silver breakdown
-    const goldETFAmount = Math.round(goldSilverAmount * 0.6);
-    const physicalGoldAmount = Math.round(goldSilverAmount * 0.4);
-    
-    return `
-## Asset Allocation Strategy
-
-Based on your risk profile (${assetAllocation.riskCategory || 'Moderate'}), we recommend the following asset allocation:
+    if (Object.keys(detailedAllocation).length > 0 && detailedAllocation.Total) {
+        console.log('Using detailed allocation data for PDF generation');
+        console.log('Detailed allocation Total:', detailedAllocation.Total);
+        
+        // Create rows for the detailed allocation table
+        const rows = [];
+        
+        // Group allocation items by type (Equity, Debt, etc.)
+        const equityItems = [];
+        const debtItems = [];
+        const alternativeItems = [];
+        const otherItems = [];
+        
+        // Process each allocation item and categorize
+        for (const [key, value] of Object.entries(detailedAllocation)) {
+            if (key !== 'Total' && key !== 'error') {
+                // Convert crore values back to rupees for display
+                const amountInRupees = Math.round(value * 10000000);
+                const formattedAmount = `₹${formatCurrency(amountInRupees)}`;
+                
+                if (key.includes('Equity')) {
+                    equityItems.push(`| | ${key} | ${formattedAmount} |`);
+                } else if (key.includes('Debt')) {
+                    debtItems.push(`| | ${key} | ${formattedAmount} |`);
+                } else if (key.includes('AIF') || key.includes('PMS')) {
+                    alternativeItems.push(`| | ${key} | ${formattedAmount} |`);
+                } else {
+                    otherItems.push(`| | ${key} | ${formattedAmount} |`);
+                }
+            }
+        }
+        
+        // Add category headers and items to rows
+        if (equityItems.length > 0) {
+            rows.push(`| **Equity** | | |`);
+            rows.push(...equityItems);
+        }
+        
+        if (debtItems.length > 0) {
+            rows.push(`| **Debt** | | |`);
+            rows.push(...debtItems);
+        }
+        
+        if (alternativeItems.length > 0) {
+            rows.push(`| **Alternative Investments** | | |`);
+            rows.push(...alternativeItems);
+        }
+        
+        if (otherItems.length > 0) {
+            rows.push(`| **Other** | | |`);
+            rows.push(...otherItems);
+        }
+        
+        // Add total row
+        const totalInRupees = Math.round(detailedAllocation.Total * 10000000);
+        rows.push(`| **Total Investment** | | ₹${formatCurrency(totalInRupees)} |`);
+        
+        detailedTable = `
+## Detailed Asset Allocation
 
 <div class="asset-allocation-table">
 
-| Asset Class | Allocation (%) |
-|-------------|----------------|
-| Equity | ${allocation.equity || 0}% |
-| Debt | ${allocation.debt || 0}% |
-| Gold/Silver | ${allocation.goldSilver || 0}% |
+| Asset Class | Investment Vehicle | Amount (₹) |
+|-------------|-------------------|------------|
+${rows.join('\n')}
 
 </div>
-
+`;
+    } else {
+        console.log('No detailed allocation data available, using fallback method');
+        console.log('Reason: ' + (Object.keys(detailedAllocation).length === 0 ? 'Empty detailed allocation' : 'Missing Total property'));
+        console.log('Asset allocation structure:', JSON.stringify(assetAllocation, null, 2));
+        console.log('Portfolio size in crores:', investmentInCrores);
+        // Fallback to the old calculation method if detailed allocation is not available
+        // Calculate amounts based on percentages
+        const equityAmount = (allocation.equity / 100) * initialInvestment;
+        const debtAmount = (allocation.debt / 100) * initialInvestment;
+        const goldSilverAmount = (allocation.goldSilver / 100) * initialInvestment;
+        
+        // Format all sub-allocations to integers with proper formatting
+        // For equity breakdown
+        const largeCapAmount = Math.round(equityAmount * 0.25);
+        const globalFundAmount = Math.round(equityAmount * 0.15);
+        const hybridFundAmount = Math.round(equityAmount * 0.15);
+        const thematicFundAmount = Math.round(equityAmount * 0.15);
+        const equityETFAmount = Math.round(equityAmount * 0.3);
+        
+        // For debt breakdown
+        const debtMFAmount = Math.round(debtAmount * 0.5);
+        const bondAmount = Math.round(debtAmount * 0.5);
+        
+        // For gold/silver breakdown
+        const goldETFAmount = Math.round(goldSilverAmount * 0.6);
+        const physicalGoldAmount = Math.round(goldSilverAmount * 0.4);
+        
+        detailedTable = `
 ## Detailed Asset Allocation
 
 <div class="asset-allocation-table">
@@ -257,6 +356,25 @@ Based on your risk profile (${assetAllocation.riskCategory || 'Moderate'}), we r
 | **Total Investment** | | ₹${formatCurrency(Math.round(initialInvestment))} |
 
 </div>
+`;
+    }
+    
+    return `
+## Asset Allocation Strategy
+
+Based on your risk profile (${assetAllocation.riskCategory || 'Moderate'}), we recommend the following asset allocation:
+
+<div class="asset-allocation-table">
+
+| Asset Class | Allocation (%) |
+|-------------|----------------|
+| Equity | ${allocation.equity || 0}% |
+| Debt | ${allocation.debt || 0}% |
+| Gold/Silver | ${allocation.goldSilver || 0}% |
+
+</div>
+
+${detailedTable}
 
 ${assetAllocation.allocationExplanation || ''}
 

@@ -333,8 +333,8 @@ function assessRiskFromAllocation(assetAllocation) {
     // Check if we have assetClassAllocation structure
     if (assetAllocation.assetClassAllocation) {
       // Extract allocation percentages from assetClassAllocation
-      const { equity = 0, debt = 0, goldSilver = 0 } = assetAllocation.assetClassAllocation;
-      console.log(`Risk Assessment - Extracted values: equity=${equity}, debt=${debt}, goldSilver=${goldSilver}`);
+      const { equity = 0, debt = 0 } = assetAllocation.assetClassAllocation;
+      console.log(`Risk Assessment - Extracted values: equity=${equity}, debt=${debt}`);
       
       // Determine risk category based on equity allocation
       let riskCategory = '';
@@ -363,8 +363,8 @@ function assessRiskFromAllocation(assetAllocation) {
     } else {
       // Direct structure - legacy format
       // Extract allocation percentages
-      const { equity = 0, debt = 0, goldSilver = 0 } = assetAllocation;
-      console.log(`Risk Assessment - Legacy format: equity=${equity}, debt=${debt}, goldSilver=${goldSilver}`);
+      const { equity = 0, debt = 0 } = assetAllocation;
+      console.log(`Risk Assessment - Legacy format: equity=${equity}, debt=${debt}`);
       
       // Determine risk category based on equity allocation
       let riskCategory = '';
@@ -401,11 +401,10 @@ function assessRiskFromAllocation(assetAllocation) {
  * Generate risk assessment details based on manual asset allocation
  * @param {number} equity - Equity allocation percentage
  * @param {number} debt - Debt allocation percentage
- * @param {number} goldSilver - Gold/Silver allocation percentage
  * @param {string} riskCategory - Determined risk category
  * @returns {Object} Risk assessment details
  */
-function generateRiskAssessmentDetailsFromAllocation(equity, debt, goldSilver, riskCategory) {
+function generateRiskAssessmentDetailsFromAllocation(equity, debt, riskCategory) {
   const descriptions = {
     'Aggressive': {
       description: 'An aggressive risk profile indicates a willingness to accept higher volatility in exchange for potentially higher returns. This portfolio has a significant allocation to equity investments, which can experience substantial short-term fluctuations but historically offer better long-term growth potential.',
@@ -448,7 +447,6 @@ ${descriptions[riskCategory].characteristics.map(c => `- ${c}`).join('\n')}
 ### Your Asset Allocation
 - **Equity**: ${equity}%
 - **Fixed Income**: ${debt}%
-- **Gold/Silver**: ${goldSilver}%
 
 This risk profile is determined based on your manual asset allocation, particularly your ${equity}% allocation to equity investments.
     `

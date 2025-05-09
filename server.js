@@ -47,7 +47,7 @@ app.post('/api/risk-assessment', (req, res) => {
 });
 
 // Manual asset allocation and risk assessment endpoint
-app.post('/api/manual-allocation', (req, res) => {
+app.post('/api/manual-allocation', async (req, res) => {
   try {
     console.log('=== Manual Allocation API Request ===');
     console.log('Raw Request Body:', JSON.stringify(req.body, null, 2));
@@ -80,14 +80,23 @@ app.post('/api/manual-allocation', (req, res) => {
     const riskProfile = risk.assessRiskFromAllocation(assetAllocation);
     console.log('Risk Profile:', JSON.stringify(riskProfile, null, 2));
     
-    // Generate asset allocation
-    const allocData = {
-      portfolioSize: clientProfile.investmentObjectives?.initialInvestmentAmount || 100000,
-      portfolioSizeCategory: allocation.determinePortfolioSizeCategory(clientProfile.investmentObjectives?.initialInvestmentAmount || 100000),
-      assetClassAllocation: assetAllocation.assetClassAllocation,
-      riskCategory: riskProfile.riskCategory
-    };
-    console.log('Allocation Data:', JSON.stringify(allocData, null, 2));
+    // Generate asset allocation using our updated logic
+    const portfolioSize = clientProfile.investmentObjectives?.initialInvestmentAmount || 100000;
+    const portfolioSizeInCrores = portfolioSize / 10000000;
+    
+    console.log(`Generating allocation for ${riskProfile.riskCategory} risk profile with ${portfolioSizeInCrores} crore portfolio`);
+    
+    // Generate a fresh allocation using our updated logic
+    const freshAllocation = allocation.generateAssetAllocation({
+      clientProfile,
+      riskProfile
+    });
+    
+    console.log('Fresh allocation generated:', JSON.stringify(freshAllocation, null, 2));
+    
+    // Use the fresh allocation data instead of the user-provided allocation
+    const allocData = freshAllocation;
+    console.log('Using updated allocation data:', JSON.stringify(allocData, null, 2));
     
     // Add default product type allocation if not present
     if (!allocData.productTypeAllocation) {
@@ -100,10 +109,6 @@ app.post('/api/manual-allocation', (req, res) => {
         debt: {
           mutualFunds: 70,
           direct: 30
-        },
-        goldSilver: {
-          etf: 60,
-          physical: 40
         }
       };
     }
@@ -117,7 +122,7 @@ app.post('/api/manual-allocation', (req, res) => {
         assetAllocation: allocData
       }, null, 2));
       
-      const productRecommendations = products.recommendProducts({
+      const productRecommendations = await products.recommendProducts({
         clientProfile,
         riskProfile,
         assetAllocation: allocData
@@ -147,19 +152,38 @@ app.post('/api/manual-allocation', (req, res) => {
 // Asset allocation endpoint
 app.post('/api/asset-allocation', (req, res) => {
   try {
+    console.log('Asset allocation request received:', JSON.stringify(req.body, null, 2));
+    
     const { clientProfile, riskProfile } = req.body;
+    
+    // Extract portfolio size for logging
+    const portfolioSize = clientProfile?.investmentObjectives?.initialInvestmentAmount || 0;
+    const portfolioSizeInCrores = portfolioSize / 10000000;
+    console.log(`Portfolio size: ${portfolioSize} INR (${portfolioSizeInCrores} crores)`);
+    console.log(`Risk profile: ${riskProfile?.riskCategory || 'Unknown'}`);
+    
+    // Generate asset allocation
     const assetAllocation = allocation.generateAssetAllocation({ clientProfile, riskProfile });
-    res.json({ success: true, assetAllocation });
+    
+    console.log('Generated asset allocation:', JSON.stringify(assetAllocation, null, 2));
+    console.log('Asset class allocation:', JSON.stringify(assetAllocation.assetClassAllocation, null, 2));
+    
+    // Send response with a clear message about the allocation
+    res.json({ 
+      success: true, 
+      message: `Generated allocation for ${riskProfile?.riskCategory || 'Unknown'} risk profile with ${portfolioSizeInCrores} crore portfolio`,
+      assetAllocation 
+    });
   } catch (error) {
     res.status(400).json({ success: false, error: error.message });
   }
 });
 
 // Product recommendation endpoint
-app.post('/api/product-recommendations', (req, res) => {
+app.post('/api/product-recommendations', async (req, res) => {
   try {
     const { clientProfile, riskProfile, assetAllocation } = req.body;
-    const productRecommendations = products.recommendProducts({ clientProfile, riskProfile, assetAllocation });
+    const productRecommendations = await products.recommendProducts({ clientProfile, riskProfile, assetAllocation });
     res.json({ success: true, productRecommendations });
   } catch (error) {
     res.status(400).json({ success: false, error: error.message });
@@ -184,7 +208,41 @@ app.post('/api/generate-proposal-pdf', async (req, res) => {
     const clientData = req.body;
     console.log('Client data received, generating proposal...');
     
-    // Generate proposal
+    // Ensure we're using the latest allocation data
+    if (clientData.clientProfile && clientData.riskProfile) {
+      console.log('Regenerating asset allocation to ensure consistency...');
+      const portfolioSize = clientData.clientProfile.investmentObjectives?.initialInvestmentAmount || 100000;
+      const portfolioSizeInCrores = portfolioSize / 10000000;
+      
+      // Generate fresh allocation data using our updated module
+      const freshAllocation = allocation.generateAssetAllocation({
+        clientProfile: clientData.clientProfile,
+        riskProfile: clientData.riskProfile
+      });
+      
+      console.log('Fresh allocation generated:', JSON.stringify(freshAllocation, null, 2));
+      console.log('Detailed allocation present:', freshAllocation.detailedAllocation ? 'YES' : 'NO');
+      
+      if (freshAllocation.detailedAllocation) {
+        console.log('Detailed allocation keys:', Object.keys(freshAllocation.detailedAllocation));
+      }
+      
+      // Replace the allocation data in clientData
+      clientData.assetAllocation = freshAllocation;
+      console.log('Asset allocation regenerated successfully');
+    }
+    
+    // Log client data before generating proposal
+    console.log('Client data before proposal generation:');
+    console.log('- Has clientProfile:', !!clientData.clientProfile);
+    console.log('- Has riskProfile:', !!clientData.riskProfile);
+    console.log('- Has assetAllocation:', !!clientData.assetAllocation);
+    
+    if (clientData.assetAllocation) {
+      console.log('- Asset allocation has detailedAllocation:', !!clientData.assetAllocation.detailedAllocation);
+    }
+    
+    // Generate proposal with the updated allocation data
     const investmentProposal = proposal.generateProposal(clientData);
     console.log('Investment proposal generated successfully');
     
@@ -213,6 +271,73 @@ if (process.env.NODE_ENV !== 'production') {
     console.log(`Server is running on port ${PORT}`);
   });
 }
+
+// Test endpoint for external product APIs
+app.get('/api/test-external-products', async (req, res) => {
+  try {
+    console.log('Testing external product APIs...');
+    
+    // Create a sample client profile and risk profile
+    const clientProfile = {
+      personalInfo: {
+        name: 'Test User',
+        age: 35
+      },
+      investmentObjectives: {
+        initialInvestmentAmount: 15000000 // 1.5 crore
+      }
+    };
+    
+    const riskProfile = {
+      riskCategory: 'aggressive',
+      riskScore: 8
+    };
+    
+    // Create a sample asset allocation with product type allocation
+    const assetAllocation = {
+      portfolioSize: 15000000, // 1.5 crore
+      assetClassAllocation: {
+        equity: 70,
+        debt: 20,
+        goldSilver: 10
+      },
+      productTypeAllocation: {
+        equity: {
+          mutualFunds: 40,
+          pms: 30,
+          aif: 20,
+          unlistedStocks: 10
+        },
+        debt: {
+          mutualFunds: 70,
+          direct: 30
+        },
+        goldSilver: {
+          etf: 100
+        }
+      }
+    };
+    
+    // Generate product recommendations
+    const productRecommendations = await products.recommendProducts({
+      clientProfile,
+      riskProfile,
+      assetAllocation
+    });
+    
+    res.json({
+      success: true,
+      message: 'External product APIs tested successfully',
+      productRecommendations
+    });
+  } catch (error) {
+    console.error('Error testing external product APIs:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
 
 // For Vercel serverless functions, we need to export the app
 module.exports = app;

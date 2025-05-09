@@ -5,6 +5,11 @@
  * and asset allocation.
  */
 
+const axios = require('axios');
+
+// Import external products module
+const externalProducts = require('./externalProducts');
+
 // Sample product database - in a real implementation, this would be loaded from a database
 const productDatabase = {
   equity: {
@@ -103,7 +108,7 @@ const productDatabase = {
  * @param {Object} clientData - Client profile, risk assessment, and asset allocation data
  * @returns {Object} Product recommendations
  */
-function recommendProducts(clientData) {
+async function recommendProducts(clientData) {
   try {
     console.log('recommendProducts - Input:', JSON.stringify(clientData, null, 2));
     
@@ -121,23 +126,17 @@ function recommendProducts(clientData) {
     }
     
     // Extract risk level from risk profile
-    const riskLevel = mapRiskCategoryToLevel(riskProfile.riskCategory || 'moderate');
-    console.log(`Risk level mapped: ${riskLevel}`);
+    const riskLevel = mapRiskCategoryToLevel(riskProfile.riskCategory);
     
     // Extract portfolio size from asset allocation
-    const portfolioSize = assetAllocation.portfolioSize || 
-                        (clientProfile && clientProfile.investmentObjectives ? 
-                        clientProfile.investmentObjectives.initialInvestmentAmount : 1000000);
-    console.log(`Portfolio size: ${portfolioSize}`);
+    const portfolioSize = assetAllocation.portfolioSize || clientProfile.investmentObjectives.initialInvestmentAmount;
     
     // Generate recommendations for each asset class
-    let equityRecommendations = {};
-    let debtRecommendations = {};
-    let goldSilverRecommendations = {};
+    let equityRecommendations, debtRecommendations, goldSilverRecommendations;
     
     try {
       console.log('Generating equity recommendations...');
-      equityRecommendations = generateEquityRecommendations(riskLevel, assetAllocation, portfolioSize);
+      equityRecommendations = await generateEquityRecommendations(riskLevel, assetAllocation, portfolioSize);
     } catch (equityError) {
       console.error('Error generating equity recommendations:', equityError);
       equityRecommendations = { 
@@ -150,7 +149,7 @@ function recommendProducts(clientData) {
     
     try {
       console.log('Generating debt recommendations...');
-      debtRecommendations = generateDebtRecommendations(riskLevel, assetAllocation, portfolioSize);
+      debtRecommendations = await generateDebtRecommendations(riskLevel, assetAllocation, portfolioSize);
     } catch (debtError) {
       console.error('Error generating debt recommendations:', debtError);
       debtRecommendations = { 
@@ -163,7 +162,7 @@ function recommendProducts(clientData) {
     
     try {
       console.log('Generating gold/silver recommendations...');
-      goldSilverRecommendations = generateGoldSilverRecommendations(assetAllocation, portfolioSize);
+      goldSilverRecommendations = await generateGoldSilverRecommendations(assetAllocation, portfolioSize);
     } catch (goldError) {
       console.error('Error generating gold/silver recommendations:', goldError);
       goldSilverRecommendations = {};
@@ -197,11 +196,11 @@ function recommendProducts(clientData) {
           products: productDatabase.equity.mutualFunds.moderate 
         } 
       },
-      debt: { 
-        mutualFunds: { 
-          allocation: 100, 
-          products: productDatabase.debt.mutualFunds.moderate 
-        } 
+      debt: {
+        mutualFunds: {
+          allocation: 100,
+          products: productDatabase.debt.mutualFunds.moderate
+        }
       },
       goldSilver: {}
     };
@@ -238,7 +237,7 @@ function mapRiskCategoryToLevel(riskCategory) {
  * @param {number} portfolioSize - Portfolio size in INR
  * @returns {Object} Equity product recommendations
  */
-function generateEquityRecommendations(riskLevel, assetAllocation, portfolioSize) {
+async function generateEquityRecommendations(riskLevel, assetAllocation, portfolioSize) {
   console.log('generateEquityRecommendations - Input:', JSON.stringify({
     riskLevel,
     assetAllocation,
@@ -309,21 +308,84 @@ function generateEquityRecommendations(riskLevel, assetAllocation, portfolioSize
     // PMS
     if (productTypeAllocation.pms > 0 && portfolioSize >= 5000000) { // 50 Lakhs minimum
       const pmsAmount = (equityAmount * productTypeAllocation.pms) / 100;
-      recommendations.pms = {
-        allocation: productTypeAllocation.pms,
-        amount: pmsAmount,
-        products: productDatabase.equity.pms[riskLevel] || productDatabase.equity.pms.moderate
-      };
+      
+      // Fetch PMS products from external API
+      try {
+        console.log('Fetching PMS products from external API...');
+        const pmsProducts = await externalProducts.fetchPMS('1 Month');
+        const formattedPmsProducts = externalProducts.formatProductData(pmsProducts, 'pms');
+        
+        recommendations.pms = {
+          allocation: productTypeAllocation.pms,
+          amount: pmsAmount,
+          products: formattedPmsProducts.length > 0 ? 
+            formattedPmsProducts : 
+            productDatabase.equity.pms[riskLevel] || productDatabase.equity.pms.moderate
+        };
+        
+        console.log(`Fetched ${formattedPmsProducts.length} PMS products from API`);
+      } catch (error) {
+        console.error('Error fetching PMS products:', error);
+        recommendations.pms = {
+          allocation: productTypeAllocation.pms,
+          amount: pmsAmount,
+          products: productDatabase.equity.pms[riskLevel] || productDatabase.equity.pms.moderate
+        };
+      }
     }
     
     // AIF
     if (productTypeAllocation.aif > 0 && portfolioSize >= 10000000) { // 1 Crore minimum
       const aifAmount = (equityAmount * productTypeAllocation.aif) / 100;
-      recommendations.aif = {
-        allocation: productTypeAllocation.aif,
-        amount: aifAmount,
-        products: productDatabase.equity.aif[riskLevel] || productDatabase.equity.aif.moderate
-      };
+      
+      // Fetch Alternative Funds products from external API
+      try {
+        console.log('Fetching Alternative Funds products from external API...');
+        const alternativeFunds = await externalProducts.fetchAlternativeFunds('1 Month');
+        const formattedAlternativeFunds = externalProducts.formatProductData(alternativeFunds, 'alternativeFunds');
+        
+        recommendations.aif = {
+          allocation: productTypeAllocation.aif,
+          amount: aifAmount,
+          products: formattedAlternativeFunds.length > 0 ? 
+            formattedAlternativeFunds : 
+            productDatabase.equity.aif[riskLevel] || productDatabase.equity.aif.moderate
+        };
+        
+        console.log(`Fetched ${formattedAlternativeFunds.length} Alternative Funds products from API`);
+      } catch (error) {
+        console.error('Error fetching Alternative Funds products:', error);
+        recommendations.aif = {
+          allocation: productTypeAllocation.aif,
+          amount: aifAmount,
+          products: productDatabase.equity.aif[riskLevel] || productDatabase.equity.aif.moderate
+        };
+      }
+    }
+    
+    // Unlisted Stocks (if portfolio size is sufficient)
+    if (portfolioSize >= 10000000 && productTypeAllocation.unlistedStocks > 0) { // 1 Crore minimum
+      const unlistedStocksAmount = (equityAmount * productTypeAllocation.unlistedStocks) / 100;
+      
+      // Fetch Unlisted Stocks products from external API
+      try {
+        console.log('Fetching Unlisted Stocks products from external API...');
+        const unlistedStocks = await externalProducts.fetchUnlistedStocks('1 Month');
+        const formattedUnlistedStocks = externalProducts.formatProductData(unlistedStocks, 'unlistedStocks');
+        
+        if (formattedUnlistedStocks.length > 0) {
+          recommendations.unlistedStocks = {
+            allocation: productTypeAllocation.unlistedStocks || 5, // Default 5% if not specified
+            amount: unlistedStocksAmount,
+            products: formattedUnlistedStocks
+          };
+          
+          console.log(`Fetched ${formattedUnlistedStocks.length} Unlisted Stocks products from API`);
+        }
+      } catch (error) {
+        console.error('Error fetching Unlisted Stocks products:', error);
+        // No fallback for unlisted stocks as they are optional
+      }
     }
     
     // ETF (add default if only mutual funds are present)
@@ -355,7 +417,7 @@ function generateEquityRecommendations(riskLevel, assetAllocation, portfolioSize
  * @param {number} portfolioSize - Portfolio size in INR
  * @returns {Object} Debt product recommendations
  */
-function generateDebtRecommendations(riskLevel, assetAllocation, portfolioSize) {
+async function generateDebtRecommendations(riskLevel, assetAllocation, portfolioSize) {
   console.log('generateDebtRecommendations - Input:', JSON.stringify({
     riskLevel,
     assetAllocation,
@@ -382,11 +444,35 @@ function generateDebtRecommendations(riskLevel, assetAllocation, portfolioSize) 
       // Calculate amount allocated to debt
       const debtAmount = (portfolioSize * debtAllocation) / 100;
       
-      // Mutual Funds (default)
+      // Fetch Mutual Funds from API based on risk level basket
+      let basketName;
+      switch(riskLevel) {
+        case 'conservative':
+          basketName = 'Edu Omega';
+          break;
+        case 'moderate':
+          basketName = 'Edu Sigma';
+          break;
+        case 'aggressive':
+          basketName = 'Edu Alpha';
+          break;
+        default:
+          basketName = 'Edu Sigma';
+      }
+      
+      // Try to get funds from the basket first
+      let mutualFundProducts = await fetchMutualFundsFromBasket(basketName);
+      
+      // If basket fetch fails, try the regular API
+      if (mutualFundProducts.length === 0) {
+        console.log(`Basket ${basketName} fetch failed, trying regular API`);
+        mutualFundProducts = await fetchMutualFundsBasedOnRisk(riskLevel);
+      }
+      
       recommendations.mutualFunds = {
         allocation: defaultProductTypeAllocation.mutualFunds,
         amount: (debtAmount * defaultProductTypeAllocation.mutualFunds) / 100,
-        products: productDatabase.debt.mutualFunds[riskLevel] || productDatabase.debt.mutualFunds.moderate
+        products: mutualFundProducts.length > 0 ? mutualFundProducts : productDatabase.debt.mutualFunds.moderate
       };
       
       // Direct (default)
@@ -416,10 +502,36 @@ function generateDebtRecommendations(riskLevel, assetAllocation, portfolioSize) 
     // Mutual Funds
     if (productTypeAllocation.mutualFunds > 0) {
       const mutualFundAmount = (debtAmount * productTypeAllocation.mutualFunds) / 100;
+      
+      // Fetch Mutual Funds from API based on risk level basket
+      let basketName;
+      switch(riskLevel) {
+        case 'conservative':
+          basketName = 'Edu Omega';
+          break;
+        case 'moderate':
+          basketName = 'Edu Sigma';
+          break;
+        case 'aggressive':
+          basketName = 'Edu Alpha';
+          break;
+        default:
+          basketName = 'Edu Sigma';
+      }
+      
+      // Try to get funds from the basket first
+      let mutualFundProducts = await fetchMutualFundsFromBasket(basketName);
+      
+      // If basket fetch fails, try the regular API
+      if (mutualFundProducts.length === 0) {
+        console.log(`Basket ${basketName} fetch failed, trying regular API`);
+        mutualFundProducts = await fetchMutualFundsBasedOnRisk(riskLevel);
+      }
+      
       recommendations.mutualFunds = {
         allocation: productTypeAllocation.mutualFunds,
         amount: mutualFundAmount,
-        products: productDatabase.debt.mutualFunds[riskLevel] || productDatabase.debt.mutualFunds.moderate
+        products: mutualFundProducts.length > 0 ? mutualFundProducts : productDatabase.debt.mutualFunds[riskLevel] || productDatabase.debt.mutualFunds.moderate
       };
     }
     
@@ -445,10 +557,35 @@ function generateDebtRecommendations(riskLevel, assetAllocation, portfolioSize) 
     
     // Add default if no recommendations were generated
     if (!recommendations.mutualFunds && !recommendations.direct && !recommendations.aif) {
+      // Fetch Mutual Funds from API based on risk level basket
+      let basketName;
+      switch(riskLevel) {
+        case 'conservative':
+          basketName = 'Edu Omega';
+          break;
+        case 'moderate':
+          basketName = 'Edu Sigma';
+          break;
+        case 'aggressive':
+          basketName = 'Edu Alpha';
+          break;
+        default:
+          basketName = 'Edu Sigma';
+      }
+      
+      // Try to get funds from the basket first
+      let mutualFundProducts = await fetchMutualFundsFromBasket(basketName);
+      
+      // If basket fetch fails, try the regular API
+      if (mutualFundProducts.length === 0) {
+        console.log(`Basket ${basketName} fetch failed, trying regular API`);
+        mutualFundProducts = await fetchMutualFundsBasedOnRisk(riskLevel);
+      }
+      
       recommendations.mutualFunds = {
         allocation: 100,
         amount: debtAmount,
-        products: productDatabase.debt.mutualFunds[riskLevel] || productDatabase.debt.mutualFunds.moderate
+        products: mutualFundProducts.length > 0 ? mutualFundProducts : productDatabase.debt.mutualFunds[riskLevel] || productDatabase.debt.mutualFunds.moderate
       };
     }
     
@@ -466,12 +603,198 @@ function generateDebtRecommendations(riskLevel, assetAllocation, portfolioSize) 
 }
 
 /**
+ * Fetch mutual funds from API based on risk level
+ * @param {string} riskLevel - Client risk level (conservative, moderate, aggressive)
+ * @returns {Array} Array of mutual fund products
+ */
+async function fetchMutualFundsBasedOnRisk(riskLevel) {
+  try {
+    // Define API endpoint and headers
+    const url = 'https://i4edevmfnodeapis.azurewebsites.net/api/master-data/regular-scheme-list';
+    const headers = {
+      'accept': '*/*',
+      'Authorization': 'APIKEY-STRFQUJDRDEyMw==',
+      'Content-Type': 'application/json'
+    };
+    
+    // Set up request body based on risk level
+    let requestBody = {
+      amcCode: [],
+      schemeType: [],
+      category: null,
+      rating: null,
+      returnInYr: 5,
+      divReInvstFlag: null,
+      schemeName: null,
+      sipMinInvestment: null,
+      sortOrder: 0,
+      pageNumber: 1,
+      pageSize: 10
+    };
+    
+    // Adjust parameters based on risk level
+    switch(riskLevel) {
+      case 'conservative':
+        requestBody.category = 'Debt';
+        requestBody.schemeType = ['Liquid Fund', 'Ultra Short Duration Fund'];
+        requestBody.rating = 5; // Highest rating for conservative
+        break;
+      case 'moderate':
+        requestBody.category = 'Debt';
+        requestBody.schemeType = ['Short Duration Fund', 'Corporate Bond Fund'];
+        requestBody.rating = 4; // High rating for moderate
+        break;
+      case 'aggressive':
+        requestBody.category = 'Debt';
+        requestBody.schemeType = ['Credit Risk Fund', 'Dynamic Bond Fund'];
+        requestBody.rating = 3; // Lower rating acceptable for aggressive
+        break;
+      default:
+        requestBody.category = 'Debt';
+        break;
+    }
+    
+    // Make API call
+    const response = await axios.post(url, requestBody, { headers });
+    
+    // Check if response is valid
+    if (response.status === 200 && response.data && Array.isArray(response.data.data)) {
+      // Map API response to our product format
+      return response.data.data.map(fund => ({
+        name: fund.SchemeName || 'Mutual Fund',
+        description: `${fund.CategoryName || 'Debt'} fund by ${fund.AMCName || 'AMC'}`,
+        expectedReturn: fund['5YrReturn'] ? `${fund['5YrReturn']}%` : '7-9%',
+        risk: mapRatingToRiskLevel(fund.Rating),
+        lockInPeriod: 'None',
+        amcCode: fund.AMCCode,
+        schemeCode: fund.SchemeCode,
+        nav: fund.NAV,
+        rating: fund.Rating,
+        category: fund.CategoryName,
+        schemeType: fund.SchemeType
+      }));
+    } else {
+      console.warn('Invalid response from mutual fund API, using fallback data');
+      return [];
+    }
+  } catch (error) {
+    console.error('Error fetching mutual funds from API:', error);
+    return [];
+  }
+}
+
+/**
+ * Try to fetch mutual funds from a specific basket
+ * @param {string} basketName - Name of the basket (e.g., 'Edu Omega', 'Edu Sigma', 'Edu Alpha')
+ * @returns {Array} Array of mutual fund products from the basket
+ */
+async function fetchMutualFundsFromBasket(basketName) {
+  try {
+    // Define API endpoint and headers
+    const url = 'https://devie4nodeapis.azurewebsites.net/api/common/basketDetails/';
+    const headers = {
+      'accept': 'application/json',
+      'Authorization': 'APIKEY-STRFQUJDRDEyMw=='
+    };
+    
+    console.log(`Fetching mutual funds from basket: ${basketName}`);
+    
+    // Make API call
+    const response = await axios.get(url, { headers });
+    
+    // Check if response is valid
+    if (response.status === 200 && response.data && response.data.data) {
+      console.log(`Basket API response received with ${response.data.data.length} baskets`);
+      
+      // Find the specific basket
+      const basket = response.data.data.find(b => b.NAME === basketName);
+      
+      if (basket && basket.SuggestedSchemeDetails && Array.isArray(basket.SuggestedSchemeDetails)) {
+        console.log(`Found basket '${basketName}' with ${basket.SuggestedSchemeDetails.length} schemes`);
+        
+        // Filter for debt funds if we're looking for debt recommendations
+        const filteredSchemes = basket.SuggestedSchemeDetails.filter(scheme => {
+          // For conservative (Edu Omega), prioritize fixed income schemes
+          if (basketName === 'Edu Omega') {
+            return scheme.SchemeType === 'Fixed Income' || scheme.CategoryName === 'Conservative Allocation';
+          }
+          // For moderate (Edu Sigma), include allocation schemes
+          else if (basketName === 'Edu Sigma') {
+            return scheme.SchemeType === 'Allocation' || scheme.CategoryName.includes('Allocation');
+          }
+          // For aggressive (Edu Alpha), include all schemes but prioritize equity
+          return true;
+        });
+        
+        if (filteredSchemes.length > 0) {
+          console.log(`Using ${filteredSchemes.length} filtered schemes from basket '${basketName}'`);
+          
+          // Map basket schemes to our product format
+          return filteredSchemes.map(scheme => ({
+            name: scheme.SchemeName || 'Mutual Fund',
+            description: `${scheme.CategoryName || 'Investment'} fund - ${basketName} basket`,
+            expectedReturn: scheme['5YrReturn'] ? `${scheme['5YrReturn']}%` : '8-10%',
+            risk: mapRatingToRiskLevel(scheme.Rating),
+            lockInPeriod: 'None',
+            isin: scheme.ISIN,
+            bseSchemeCode: scheme.BSESchemeCode,
+            amcCode: scheme.AMCCode,
+            rating: scheme.Rating,
+            category: scheme.CategoryName,
+            schemeType: scheme.SchemeType,
+            returns: {
+              '1yr': scheme['1YrReturn'],
+              '3yr': scheme['3YrReturn'],
+              '5yr': scheme['5YrReturn'],
+              '10yr': scheme['10YrReturn']
+            }
+          }));
+        } else {
+          console.log(`No suitable schemes found in basket '${basketName}' after filtering`);
+        }
+      } else {
+        console.warn(`Basket '${basketName}' not found in response or has no schemes`);
+      }
+    } else {
+      console.warn(`Invalid response from basket API: ${JSON.stringify(response.data)}`);
+    }
+    
+    return [];
+  } catch (error) {
+    console.error('Error fetching mutual funds from basket API:', error);
+    return [];
+  }
+}
+
+/**
+ * Map rating to risk level
+ * @param {number} rating - Rating (1-5)
+ * @returns {string} Risk level description
+ */
+function mapRatingToRiskLevel(rating) {
+  switch(rating) {
+    case 5:
+      return 'Very Low';
+    case 4:
+      return 'Low';
+    case 3:
+      return 'Moderate';
+    case 2:
+      return 'High';
+    case 1:
+      return 'Very High';
+    default:
+      return 'Moderate';
+  }
+}
+
+/**
  * Generate gold/silver product recommendations
  * @param {Object} assetAllocation - Asset allocation data
  * @param {number} portfolioSize - Portfolio size in INR
  * @returns {Object} Gold/silver product recommendations
  */
-function generateGoldSilverRecommendations(assetAllocation, portfolioSize) {
+async function generateGoldSilverRecommendations(assetAllocation, portfolioSize) {
   console.log('generateGoldSilverRecommendations - Input:', JSON.stringify({
     assetAllocation,
     portfolioSize
@@ -592,6 +915,9 @@ function generateRecommendationSummary(recommendations, riskCategory) {
     }
     if (recommendations.equity.aif) {
       summary += `\n- Alternative Investment Funds (AIF) with ${riskCategory === 'conservative' ? 'long-only value' : riskCategory === 'moderate' ? 'special situations' : 'long-short'} strategies.`;
+    }
+    if (recommendations.equity.unlistedStocks) {
+      summary += `\n- Unlisted Stocks with high growth potential and pre-IPO opportunities for higher returns.`;
     }
   }
   

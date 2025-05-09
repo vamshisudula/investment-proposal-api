@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test External Products API</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        .container {
+            margin-top: 20px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .details-btn {
+            background-color: #2196F3;
+            color: white;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        .details-btn:hover {
+            background-color: #0b7dda;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            font-size: 12px;
+        }
+        .product-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            background-color: #f9f9f9;
+        }
+        .product-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .product-logo {
+            width: 60px;
+            height: 60px;
+            margin-right: 15px;
+            overflow: hidden;
+            border-radius: 5px;
+            border: 1px solid #eee;
+            background-color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .product-logo img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        .product-card h4 {
+            margin-top: 0;
+            margin-bottom: 0;
+            color: #2196F3;
+            flex: 1;
+        }
+        .raw-data {
+            margin-top: 10px;
+            border-top: 1px dashed #ddd;
+            padding-top: 10px;
+        }
+        .loading {
+            display: inline-block;
+            margin-left: 10px;
+            font-style: italic;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test External Products API Integration</h1>
+    <p>This page tests the integration of external APIs for fetching product data for:</p>
+    <ul>
+        <li>Unlisted Stocks (IVP001)</li>
+        <li>Alternative Funds (IVP005)</li>
+        <li>PMS (IVP004)</li>
+    </ul>
+
+    <div class="container">
+        <button id="testButton">Test External Products API</button>
+        <span id="loading" class="loading" style="display: none;">Loading...</span>
+    </div>
+
+    <div class="container">
+        <h2>API Response:</h2>
+        <pre id="responseJson"></pre>
+    </div>
+
+    <div class="container">
+        <h2>Product Recommendations:</h2>
+        
+        <h3>PMS Products:</h3>
+        <div id="pmsProducts"></div>
+        
+        <h3>Alternative Funds:</h3>
+        <div id="alternativeFunds"></div>
+        
+        <h3>Unlisted Stocks:</h3>
+        <div id="unlistedStocks"></div>
+    </div>
+
+    <script>
+        document.getElementById('testButton').addEventListener('click', async function() {
+            const loadingEl = document.getElementById('loading');
+            const responseEl = document.getElementById('responseJson');
+            const pmsProductsEl = document.getElementById('pmsProducts');
+            const alternativeFundsEl = document.getElementById('alternativeFunds');
+            const unlistedStocksEl = document.getElementById('unlistedStocks');
+            
+            // Clear previous results
+            responseEl.textContent = '';
+            pmsProductsEl.innerHTML = '';
+            alternativeFundsEl.innerHTML = '';
+            unlistedStocksEl.innerHTML = '';
+            
+            // Show loading indicator
+            loadingEl.style.display = 'inline-block';
+            
+            try {
+                // Call the test endpoint
+                const response = await fetch('/api/test-external-products');
+                const data = await response.json();
+                
+                // Display the full JSON response
+                responseEl.textContent = JSON.stringify(data, null, 2);
+                
+                // Extract and display PMS products
+                if (data.productRecommendations?.recommendations?.equity?.pms?.products) {
+                    const pmsProducts = data.productRecommendations.recommendations.equity.pms.products;
+                    displayProducts(pmsProducts, pmsProductsEl);
+                } else {
+                    pmsProductsEl.innerHTML = '<p>No PMS products found</p>';
+                }
+                
+                // Extract and display Alternative Funds
+                if (data.productRecommendations?.recommendations?.equity?.aif?.products) {
+                    const aifProducts = data.productRecommendations.recommendations.equity.aif.products;
+                    displayProducts(aifProducts, alternativeFundsEl);
+                } else {
+                    alternativeFundsEl.innerHTML = '<p>No Alternative Funds found</p>';
+                }
+                
+                // Extract and display Unlisted Stocks
+                if (data.productRecommendations?.recommendations?.equity?.unlistedStocks?.products) {
+                    const unlistedStocks = data.productRecommendations.recommendations.equity.unlistedStocks.products;
+                    displayProducts(unlistedStocks, unlistedStocksEl);
+                } else {
+                    unlistedStocksEl.innerHTML = '<p>No Unlisted Stocks found</p>';
+                }
+            } catch (error) {
+                responseEl.textContent = `Error: ${error.message}`;
+            } finally {
+                // Hide loading indicator
+                loadingEl.style.display = 'none';
+            }
+        });
+        
+        function displayProducts(products, containerEl) {
+            if (!products || products.length === 0) {
+                containerEl.innerHTML = '<p>No products found</p>';
+                return;
+            }
+            
+            products.forEach(product => {
+                const card = document.createElement('div');
+                card.className = 'product-card';
+                
+                // Check if product has a logo (for unlisted stocks)
+                let logoHtml = '';
+                if (product.logoUrl) {
+                    logoHtml = `<div class="product-logo"><img src="${product.logoUrl}" alt="${product.name} logo"></div>`;
+                }
+                
+                // Create product content with logo if available
+                let content = `
+                    <div class="product-header">
+                        ${logoHtml}
+                        <h4>${product.name || 'Unknown Product'}</h4>
+                    </div>
+                `;
+                
+                // Description
+                if (product.description && product.description !== 'No description available') {
+                    content += `<p><strong>Description:</strong> ${product.description}</p>`;
+                }
+                
+                // Returns/Performance
+                if (product.expectedReturn && product.expectedReturn !== 'Variable') {
+                    content += `<p><strong>Expected Return:</strong> ${product.expectedReturn}</p>`;
+                }
+                
+                // Risk
+                if (product.risk && product.risk !== 'Moderate') {
+                    content += `<p><strong>Risk Level:</strong> ${product.risk}</p>`;
+                }
+                
+                // Lock-in Period
+                if (product.lockInPeriod && product.lockInPeriod !== 'Variable') {
+                    content += `<p><strong>Lock-in Period:</strong> ${product.lockInPeriod}</p>`;
+                }
+                
+                // Minimum Investment
+                if (product.minimumInvestment && product.minimumInvestment !== 'Not specified') {
+                    // Format minimum investment if it's a number
+                    let minInvestment = product.minimumInvestment;
+                    if (!isNaN(minInvestment)) {
+                        const investmentNum = parseInt(minInvestment);
+                        if (investmentNum >= 10000000) {
+                            minInvestment = `${(investmentNum / 10000000).toFixed(2)} Crore`;
+                        } else if (investmentNum >= 100000) {
+                            minInvestment = `${(investmentNum / 100000).toFixed(2)} Lakh`;
+                        } else {
+                            minInvestment = `₹${investmentNum.toLocaleString()}`;
+                        }
+                    }
+                    content += `<p><strong>Minimum Investment:</strong> ${minInvestment}</p>`;
+                }
+                
+                // Face Value (for unlisted stocks)
+                if (product.faceValue) {
+                    content += `<p><strong>Face Value:</strong> ₹${product.faceValue}</p>`;
+                }
+                
+                // ISIN (for unlisted stocks)
+                if (product.originalData && product.originalData.isin_number) {
+                    content += `<p><strong>ISIN:</strong> ${product.originalData.isin_number}</p>`;
+                }
+                
+                // Fund Manager
+                if (product.fundManager) {
+                    content += `<p><strong>Fund Manager:</strong> ${product.fundManager}</p>`;
+                }
+                
+                // Strategy/Classification
+                if (product.strategy) {
+                    content += `<p><strong>Strategy:</strong> ${product.strategy}</p>`;
+                }
+                
+                // Benchmark
+                if (product.benchmark) {
+                    content += `<p><strong>Benchmark:</strong> ${product.benchmark}</p>`;
+                }
+                
+                // Company Name (for unlisted stocks)
+                if (product.companyName && product.companyName !== product.name) {
+                    content += `<p><strong>Company Name:</strong> ${product.companyName}</p>`;
+                }
+                
+                // Sector (for unlisted stocks)
+                if (product.sector) {
+                    content += `<p><strong>Sector:</strong> ${product.sector}</p>`;
+                }
+                
+                // Add a view details button that shows the original data
+                content += `
+                    <button class="details-btn" onclick="toggleDetails(this)">View Raw Data</button>
+                    <div class="raw-data" style="display: none;">
+                        <pre>${JSON.stringify(product.originalData, null, 2)}</pre>
+                    </div>
+                `;
+                
+                card.innerHTML = content;
+                containerEl.appendChild(card);
+            });
+        }
+        
+        function toggleDetails(btn) {
+            const rawData = btn.nextElementSibling;
+            if (rawData.style.display === 'none') {
+                rawData.style.display = 'block';
+                btn.textContent = 'Hide Raw Data';
+            } else {
+                rawData.style.display = 'none';
+                btn.textContent = 'View Raw Data';
+            }
+        }
+    </script>
+</body>
+</html>

@@ -65,7 +65,7 @@ function generateAssetClassAllocation(riskCategory, portfolioSize) {
   // For small portfolios (1 cr or less), use these specific allocations
   if (portfolioSize <= 1) {
     switch (riskCategory) {
-      case 'Ultra Aggressive':
+      case 'Ultra-Aggressive':
         return {
           equity: 100,  // 100% Equity MF
           debt: 0
@@ -98,7 +98,7 @@ function generateAssetClassAllocation(riskCategory, portfolioSize) {
   
   // For larger portfolios, use standard allocations
   switch (riskCategory) {
-    case 'Ultra Aggressive':
+    case 'Ultra-Aggressive':
       return {
         equity: 90,     // PMS + MF + part of AIF
         debt: 10
@@ -179,13 +179,13 @@ function generateAllocationExplanation(riskCategory, portfolioSizeInCrores) {
  * Portfolio Allocation Logic
  * 
  * This function calculates the appropriate asset allocation based on:
- * 1. Strategy type (Ultra Aggressive, Aggressive, Moderate, Conservative)
+ * 1. Strategy type (Ultra-Aggressive, Aggressive, Moderate, Conservative)
  * 2. Portfolio size (in crores)
  * 
  * NOTE: All monetary values in this function and its related functions are in CRORES of INR.
  * 
  * Special cases as per the investment guidelines:
- * - Ultra Aggressive: For 1cr and less → 100% in Equity MF
+ * - Ultra-Aggressive: For 1cr and less → 100% in Equity MF
  * - Aggressive: For 1cr and less → 75% Equity MF, 15% Debt MF, 10% Direct Debt
  * - Moderate: For 1cr and less → 60% Equity MF, 20% Debt MF, 20% Direct Debt
  * - Conservative: For 2cr and less → 40% Equity MF, 30% Debt MF, 30% Direct Debt
@@ -244,7 +244,7 @@ function calculateAllocation(strategy, portfolioSize) {
   }
 
   // Standard allocations for larger portfolios
-  if (strategy === "Ultra Aggressive") {
+  if (strategy === "Ultra-Aggressive") {
     // Ultra Aggressive has fixed percentages across portfolio sizes
     allocation = {
       "AIF": portfolioSize * 0.60,              // 60%
@@ -314,7 +314,7 @@ function getPredefinedAllocation(strategy, portfolioSize) {
   portfolioSize = Number(portfolioSize);
   
   // Create lookup tables based on the CSV data
-  // Based on Image 4 - Ultra Aggressive strategy table values
+  // Based on Image 4 - Ultra-Aggressive strategy table values
   const ultraAggressiveLookup = {
     2: { "AIF": 1.2, "PMS": 0.5, "Mutual Funds": 0.3 },
     5: { "AIF": 3, "PMS": 1.25, "Mutual Funds": 0.75 },
@@ -356,7 +356,7 @@ function getPredefinedAllocation(strategy, portfolioSize) {
   
   // Get the lookup table based on strategy
   let lookupTable;
-  if (strategy === "Ultra Aggressive") {
+  if (strategy === "Ultra-Aggressive") {
     lookupTable = ultraAggressiveLookup;
   } else if (strategy === "Aggressive") {
     lookupTable = aggressiveLookup;
@@ -441,7 +441,7 @@ function getPredefinedAllocation(strategy, portfolioSize) {
 /**
  * Main function to get the portfolio allocation
  * 
- * @param {string} strategy - "Ultra Aggressive", "Aggressive", "Moderate", or "Conservative"
+ * @param {string} strategy - "Ultra-Aggressive", "Aggressive", "Moderate", or "Conservative"
  * @param {number} portfolioSize - Portfolio size in crores of INR
  * @returns {object} - The allocation breakdown with all values in crores of INR
  */

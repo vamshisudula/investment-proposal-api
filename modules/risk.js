@@ -200,12 +200,14 @@ function calculateAgeFromDOB(dob) {
  * @returns {string} Risk category
  */
 function determineRiskCategory(riskScore) {
-  if (riskScore >= 22) {
-    return 'Aggressive';
-  } else if (riskScore >= 15) {
-    return 'Moderate';
+  if (riskScore <= 12) {
+    return 'Conservative'; // Low Risk (8-12 Points)
+  } else if (riskScore <= 17) {
+    return 'Moderate'; // Balanced Risk (13-17 Points)
+  } else if (riskScore <= 22) {
+    return 'Aggressive'; // High Risk (18-22 Points)
   } else {
-    return 'Conservative';
+    return 'Ultra-Aggressive'; // Very High Risk (23+ Points)
   }
 }
 
@@ -298,6 +300,8 @@ function getRiskScoreExplanation(riskScore, riskCategory) {
       return 'This means you have a balanced approach to risk and return, seeking growth while maintaining some stability in your portfolio.';
     case 'Aggressive':
       return 'This suggests you are comfortable with higher volatility in pursuit of greater long-term returns. Your portfolio will focus on growth-oriented investments.';
+    case 'Ultra-Aggressive':
+      return 'This indicates you are willing to accept very high volatility in pursuit of maximum long-term returns. Your portfolio will focus on high-growth investments.';
     default:
       return 'This indicates your balanced approach to investing.';
   }
@@ -311,13 +315,15 @@ function getRiskScoreExplanation(riskScore, riskCategory) {
 function getRiskCategoryDescription(riskCategory) {
   switch (riskCategory) {
     case 'Conservative':
-      return 'Conservative investors prioritize capital preservation and stable returns over growth. They are uncomfortable with significant market fluctuations and prefer investments with lower risk and more predictable outcomes.';
+      return 'A conservative risk profile (8-12 points) prioritizes capital preservation and income over growth. This portfolio has a higher allocation to fixed-income investments and alternative assets, with a smaller allocation to equities to provide some growth potential.';
     case 'Moderate':
-      return 'Moderate investors seek a balance between growth and stability. They can tolerate some market fluctuations for the potential of higher returns over time, but still want to limit extreme volatility.';
+      return 'A moderate risk profile (13-17 points) balances growth potential with stability. This portfolio has a meaningful allocation to equities for growth, combined with fixed-income investments to provide income and reduce overall volatility.';
     case 'Aggressive':
-      return 'Aggressive investors prioritize growth and are willing to accept significant market fluctuations for the potential of higher returns. They have a longer investment horizon and can emotionally withstand market downturns.';
+      return 'An aggressive risk profile (18-22 points) indicates a willingness to accept higher volatility in exchange for potentially higher returns. This portfolio has a significant allocation to equity investments, which can experience substantial short-term fluctuations but historically offer better long-term growth potential.';
+    case 'Ultra-Aggressive':
+      return 'An ultra-aggressive risk profile (23+ points) maximizes growth potential with very high tolerance for volatility. This portfolio has a dominant allocation to equity investments, potentially including higher-risk sectors, emerging markets, and alternative investments. Suitable for investors with very long time horizons and high risk tolerance.';
     default:
-      return 'Your risk profile indicates your tolerance for investment risk and volatility.';
+      return 'Risk profile description not available.';
   }
 }
 
@@ -370,15 +376,18 @@ function assessRiskFromAllocation(assetAllocation) {
       let riskCategory = '';
       let riskScore = 0;
       
-      if (equity >= 70) {
+      if (equity >= 80) {
+        riskCategory = 'Ultra-Aggressive';
+        riskScore = 24;
+      } else if (equity >= 65) {
         riskCategory = 'Aggressive';
-        riskScore = 22;
-      } else if (equity >= 50) {
+        riskScore = 20;
+      } else if (equity >= 45) {
         riskCategory = 'Moderate';
-        riskScore = 18;
+        riskScore = 15;
       } else {
         riskCategory = 'Conservative';
-        riskScore = 12;
+        riskScore = 10;
       }
       
       // Generate details about the risk assessment
@@ -406,8 +415,17 @@ function assessRiskFromAllocation(assetAllocation) {
  */
 function generateRiskAssessmentDetailsFromAllocation(equity, debt, riskCategory) {
   const descriptions = {
+    'Ultra-Aggressive': {
+      description: 'An ultra-aggressive risk profile (23+ points) maximizes growth potential with very high tolerance for volatility. This portfolio has a dominant allocation to equity investments, potentially including higher-risk sectors, emerging markets, and alternative investments.',
+      characteristics: [
+        'Maximized for long-term capital appreciation',
+        'Very high tolerance for market volatility',
+        'Very long investment time horizon (10+ years)',
+        'Suitable for investors with substantial risk capacity and willingness to accept significant fluctuations'
+      ]
+    },
     'Aggressive': {
-      description: 'An aggressive risk profile indicates a willingness to accept higher volatility in exchange for potentially higher returns. This portfolio has a significant allocation to equity investments, which can experience substantial short-term fluctuations but historically offer better long-term growth potential.',
+      description: 'An aggressive risk profile (18-22 points) indicates a willingness to accept higher volatility in exchange for potentially higher returns. This portfolio has a significant allocation to equity investments, which can experience substantial short-term fluctuations but historically offer better long-term growth potential.',
       characteristics: [
         'Focused on long-term capital appreciation',
         'Comfortable with market volatility',
@@ -416,7 +434,7 @@ function generateRiskAssessmentDetailsFromAllocation(equity, debt, riskCategory)
       ]
     },
     'Moderate': {
-      description: 'A moderate risk profile balances growth potential with stability. This portfolio has a meaningful allocation to equities for growth, combined with fixed-income investments to provide income and reduce overall volatility.',
+      description: 'A moderate risk profile (13-17 points) balances growth potential with stability. This portfolio has a meaningful allocation to equities for growth, combined with fixed-income investments to provide income and reduce overall volatility.',
       characteristics: [
         'Balanced approach to growth and capital preservation',
         'Moderate tolerance for market fluctuations',
@@ -425,7 +443,7 @@ function generateRiskAssessmentDetailsFromAllocation(equity, debt, riskCategory)
       ]
     },
     'Conservative': {
-      description: 'A conservative risk profile prioritizes capital preservation and income over growth. This portfolio has a higher allocation to fixed-income investments and alternative assets, with a smaller allocation to equities to provide some growth potential.',
+      description: 'A conservative risk profile (8-12 points) prioritizes capital preservation and income over growth. This portfolio has a higher allocation to fixed-income investments and alternative assets, with a smaller allocation to equities to provide some growth potential.',
       characteristics: [
         'Focus on capital preservation and income',
         'Low tolerance for market volatility',

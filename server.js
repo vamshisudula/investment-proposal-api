@@ -10,6 +10,8 @@ const risk = require('./modules/risk');
 const allocation = require('./modules/allocation');
 const products = require('./modules/products');
 const proposal = require('./modules/proposal');
+const marketOutlook = require('./modules/marketOutlook');
+const stockCategories = require('./modules/stockCategories');
 
 // Create Express app
 const app = express();
@@ -271,6 +273,56 @@ if (process.env.NODE_ENV !== 'production') {
     console.log(`Server is running on port ${PORT}`);
   });
 }
+
+// Stock categories endpoint
+app.get('/api/stock-categories', async (req, res) => {
+  try {
+    console.log('Fetching stock categories data...');
+    
+    // Fetch stock categories data from the API
+    const stockCategoriesData = await stockCategories.fetchStockCategories();
+    
+    // Format the data for frontend consumption
+    const formattedData = stockCategories.formatStockCategories(stockCategoriesData);
+    
+    console.log('Returning stock categories to client');
+    res.json({
+      success: true,
+      data: formattedData
+    });
+  } catch (error) {
+    console.error('Error fetching stock categories data:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// Market outlook and debt overview endpoint - returns only the latest entry
+app.get('/api/market-outlook', async (req, res) => {
+  try {
+    console.log('Fetching latest market outlook data...');
+    
+    // Fetch market outlook data from the API
+    const marketOutlookData = await marketOutlook.fetchMarketOutlookData();
+    
+    // Format the data to get only the latest entry
+    const formattedData = marketOutlook.formatMarketOutlookData(marketOutlookData);
+    
+    console.log('Returning latest market outlook entry to client');
+    res.json({
+      success: true,
+      data: formattedData
+    });
+  } catch (error) {
+    console.error('Error fetching market outlook data:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
 
 // Test endpoint for external product APIs
 app.get('/api/test-external-products', async (req, res) => {

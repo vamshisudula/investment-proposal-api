@@ -9,6 +9,7 @@ const axios = require('axios');
 
 // Import external products module
 const externalProducts = require('./externalProducts');
+const stockCategories = require('./stockCategories');
 
 // Sample product database - in a real implementation, this would be loaded from a database
 const productDatabase = {
@@ -363,6 +364,99 @@ async function generateEquityRecommendations(riskLevel, assetAllocation, portfol
       }
     }
     
+    // Listed Stocks (based on stock categories)
+    if (productTypeAllocation.listedStocks > 0) {
+      const listedStocksAmount = (equityAmount * productTypeAllocation.listedStocks) / 100;
+      
+      // Fetch Stock Categories from API
+      try {
+        console.log('Fetching Stock Categories from API...');
+        const stockCategoriesData = await stockCategories.fetchStockCategories();
+        const formattedStockCategories = stockCategories.formatStockCategories(stockCategoriesData);
+        
+        if (formattedStockCategories.length > 0) {
+          // Create stock category products based on fetched stock categories
+          const stockCategoryProducts = formattedStockCategories.map(category => ({
+            name: `${category.name} Stock`,
+            description: `Listed equity in ${category.name} category`,
+            expectedReturn: category.code === 'LACAP' ? '10-12%' : 
+                          category.code === 'MIDCAP' ? '12-15%' : 
+                          category.code === 'SMCAP' ? '15-18%' : '18-22%',
+            risk: category.code === 'LACAP' ? 'Moderate' : 
+                 category.code === 'MIDCAP' ? 'Moderate-High' : 
+                 category.code === 'SMCAP' ? 'High' : 'Very High',
+            category: category.name
+          }));
+          
+          recommendations.listedStocks = {
+            allocation: productTypeAllocation.listedStocks || 10, // Default 10% if not specified
+            amount: listedStocksAmount,
+            products: stockCategoryProducts
+          };
+          
+          console.log(`Created ${stockCategoryProducts.length} Listed Stocks products from stock categories`);
+        } else {
+          console.warn('No Stock Categories returned from API');
+          recommendations.listedStocks = {
+            allocation: productTypeAllocation.listedStocks || 10,
+            amount: listedStocksAmount,
+            products: [
+              { 
+                name: "Large Cap Stock", 
+                description: "Listed equity in large cap category",
+                expectedReturn: "10-12%",
+                risk: "Moderate",
+                category: "Large Cap"
+              },
+              { 
+                name: "Mid Cap Stock", 
+                description: "Listed equity in mid cap category",
+                expectedReturn: "12-15%",
+                risk: "Moderate-High",
+                category: "Mid Cap"
+              },
+              { 
+                name: "Small Cap Stock", 
+                description: "Listed equity in small cap category",
+                expectedReturn: "15-18%",
+                risk: "High",
+                category: "Small Cap"
+              }
+            ]
+          };
+        }
+      } catch (error) {
+        console.error('Error fetching Stock Categories:', error);
+        recommendations.listedStocks = {
+          allocation: productTypeAllocation.listedStocks || 10,
+          amount: listedStocksAmount,
+          products: [
+            { 
+              name: "Large Cap Stock", 
+              description: "Listed equity in large cap category",
+              expectedReturn: "10-12%",
+              risk: "Moderate",
+              category: "Large Cap"
+            },
+            { 
+              name: "Mid Cap Stock", 
+              description: "Listed equity in mid cap category",
+              expectedReturn: "12-15%",
+              risk: "Moderate-High",
+              category: "Mid Cap"
+            },
+            { 
+              name: "Small Cap Stock", 
+              description: "Listed equity in small cap category",
+              expectedReturn: "15-18%",
+              risk: "High",
+              category: "Small Cap"
+            }
+          ]
+        };
+      }
+    }
+    
     // Unlisted Stocks (if portfolio size is sufficient)
     if (portfolioSize >= 10000000 && productTypeAllocation.unlistedStocks > 0) { // 1 Crore minimum
       const unlistedStocksAmount = (equityAmount * productTypeAllocation.unlistedStocks) / 100;
@@ -381,10 +475,51 @@ async function generateEquityRecommendations(riskLevel, assetAllocation, portfol
           };
           
           console.log(`Fetched ${formattedUnlistedStocks.length} Unlisted Stocks products from API`);
+        } else {
+          console.warn('No Unlisted Stocks products returned from API');
+          recommendations.unlistedStocks = {
+            allocation: productTypeAllocation.unlistedStocks || 5,
+            amount: unlistedStocksAmount,
+            products: [
+              { 
+                name: "Unlisted Company A", 
+                description: "Pre-IPO opportunity in technology sector",
+                expectedReturn: "15-20% p.a.",
+                risk: "High",
+                lockInPeriod: "Variable"
+              },
+              { 
+                name: "Unlisted Company B", 
+                description: "Growth stage company in financial services",
+                expectedReturn: "18-25% p.a.",
+                risk: "Very High",
+                lockInPeriod: "Variable"
+              }
+            ]
+          };
         }
       } catch (error) {
         console.error('Error fetching Unlisted Stocks products:', error);
-        // No fallback for unlisted stocks as they are optional
+        recommendations.unlistedStocks = {
+          allocation: productTypeAllocation.unlistedStocks || 5,
+          amount: unlistedStocksAmount,
+          products: [
+            { 
+              name: "Unlisted Company A", 
+              description: "Pre-IPO opportunity in technology sector",
+              expectedReturn: "15-20% p.a.",
+              risk: "High",
+              lockInPeriod: "Variable"
+            },
+            { 
+              name: "Unlisted Company B", 
+              description: "Growth stage company in financial services",
+              expectedReturn: "18-25% p.a.",
+              risk: "Very High",
+              lockInPeriod: "Variable"
+            }
+          ]
+        };
       }
     }
     
@@ -909,6 +1044,9 @@ function generateRecommendationSummary(recommendations, riskCategory) {
     summary += '\n\nFor equity allocation:';
     if (recommendations.equity.mutualFunds) {
       summary += `\n- Equity mutual funds focused on ${riskCategory === 'conservative' ? 'large-cap and dividend-yielding' : riskCategory === 'moderate' ? 'multi-cap and focused' : 'mid-cap, small-cap, and sectoral'} stocks.`;
+    }
+    if (recommendations.equity.listedStocks) {
+      summary += `\n- Listed Stocks across market capitalizations (${recommendations.equity.listedStocks.products.map(p => p.category).join(', ')}) for direct equity exposure.`;
     }
     if (recommendations.equity.pms) {
       summary += `\n- Portfolio Management Services (PMS) with a ${riskCategory === 'conservative' ? 'blue-chip' : riskCategory === 'moderate' ? 'multi-strategy' : 'concentrated growth'} approach.`;

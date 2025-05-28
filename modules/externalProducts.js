@@ -5,21 +5,33 @@
  * - Unlisted Stocks (IVP001)
  * - Alternative Funds (IVP005)
  * - PMS (IVP004)
+ * - Listed Stocks (Mutual Fund API)
  */
 
 const axios = require('axios');
+require('dotenv').config();
 
 // API configuration
 const API_CONFIG = {
-  baseUrl: 'https://nfddevapi.azurewebsites.net/api/product/getproductsbyproductcode',
-  apiKey: 'api_key_94f6b0f2-1a3e-4d57-bc4f-dafce73a92c5',
+  baseUrl: process.env.PRODUCTS_API_URL || 'https://nfddevapi.azurewebsites.net/api/product/getproductsbyproductcode',
+  apiKey: process.env.EXTERNAL_PRODUCTS_API_KEY || 'api_key_94f6b0f2-1a3e-4d57-bc4f-dafce73a92c5',
   productCodes: {
     UNLISTED_STOCKS: 'IVP001',
     ALTERNATIVE_FUNDS: 'IVP005',
-    PMS: 'IVP004'
+    PMS: 'IVP004',
+    DEBT_PAPERS: 'IVP002'
   },
   returns: '1 Month',
   timeout: 10000, // 10 seconds timeout
+  retries: 2,     // Number of retry attempts
+  retryDelay: 1000 // Delay between retries in ms
+};
+
+// Listed Stocks API configuration
+const LISTED_STOCKS_API_CONFIG = {
+  baseUrl: process.env.LISTED_STOCKS_API_URL || 'https://i4eprodmfnodeapis.azurewebsites.net/api/master-data/regular-scheme-list',
+  apiKey: process.env.LISTED_STOCKS_API_KEY || 'APIKEY-STRFQUJDRDEyMw==',
+  timeout: 15000, // 15 seconds timeout
   retries: 2,     // Number of retry attempts
   retryDelay: 1000 // Delay between retries in ms
 };
@@ -121,6 +133,71 @@ function getMockProductData(productCode) {
   
   // Mock data in the exact format as the API response
   const mockData = {
+    [API_CONFIG.productCodes.DEBT_PAPERS]: [
+      {
+        _id: '675fc866a647e3fe623641ee',
+        account_id: '674a9fc63624e335735c0161',
+        manufacturer_id: {
+          _id: '675fc70ea647e3fe62364183',
+          manufacturer_name: 'Northern Arc Capital'
+        },
+        product_id: '66ff94cb983a4af4b75da16b',
+        instrument_name: 'Northern Arc Capital NCD Series I',
+        instrument_type: 'Non-Convertible Debenture',
+        maturity_date: '15 Apr 2026',
+        rating: 'AA',
+        yield: '9.25%',
+        face_value: 10000,
+        min_investment: 200000,
+        interest_payment: 'Annual',
+        listed: true,
+        risk_grade: 'Moderate',
+        issuer_description: 'Northern Arc Capital is a leading financial services platform in India focused on underserved individuals and businesses',
+        issue_size: '500 Crore'
+      },
+      {
+        _id: '675fc866a647e3fe623641ef',
+        account_id: '674a9fc63624e335735c0161',
+        manufacturer_id: {
+          _id: '675fc70ea647e3fe62364184',
+          manufacturer_name: 'Shriram Transport Finance'
+        },
+        product_id: '66ff94cb983a4af4b75da16c',
+        instrument_name: 'Shriram Transport Finance NCD Series II',
+        instrument_type: 'Non-Convertible Debenture',
+        maturity_date: '22 Jul 2027',
+        rating: 'AA+',
+        yield: '8.75%',
+        face_value: 1000,
+        min_investment: 100000,
+        interest_payment: 'Quarterly',
+        listed: true,
+        risk_grade: 'Low-Moderate',
+        issuer_description: 'Shriram Transport Finance is a leading NBFC in commercial vehicle financing sector',
+        issue_size: '750 Crore'
+      },
+      {
+        _id: '675fc866a647e3fe623641eg',
+        account_id: '674a9fc63624e335735c0161',
+        manufacturer_id: {
+          _id: '675fc70ea647e3fe62364185',
+          manufacturer_name: 'Piramal Capital & Housing Finance'
+        },
+        product_id: '66ff94cb983a4af4b75da16d',
+        instrument_name: 'Piramal Capital Secured NCD 2025',
+        instrument_type: 'Secured Non-Convertible Debenture',
+        maturity_date: '10 Mar 2025',
+        rating: 'AA-',
+        yield: '9.50%',
+        face_value: 1000,
+        min_investment: 150000,
+        interest_payment: 'Semi-Annual',
+        listed: true,
+        risk_grade: 'Moderate',
+        issuer_description: 'Piramal Capital & Housing Finance is a diversified financial services conglomerate with presence across real estate and non-real estate lending',
+        issue_size: '400 Crore'
+      }
+    ],
     [API_CONFIG.productCodes.PMS]: [
       {
         _id: '675fc866a647e3fe623641ed',
@@ -348,6 +425,28 @@ function formatProductData(rawProducts, productType) {
       
       // Format based on product type
       switch (productType) {
+        case 'debtPapers':
+          // Format Debt Papers data
+          formattedProduct.name = product.instrument_name || 'Unknown Debt Instrument';
+          formattedProduct.description = product.issuer_description || 'No description available';
+          formattedProduct.expectedReturn = product.yield || 'Variable';
+          formattedProduct.risk = product.risk_grade || 'Moderate';
+          formattedProduct.lockInPeriod = `Until ${product.maturity_date}` || 'Variable';
+          formattedProduct.minimumInvestment = product.min_investment ? 
+            `₹${product.min_investment.toLocaleString('en-IN')}` : 'Not specified';
+          
+          // Add debt paper-specific fields
+          formattedProduct.instrumentType = product.instrument_type || 'Debt Instrument';
+          formattedProduct.maturityDate = product.maturity_date || 'Not specified';
+          formattedProduct.rating = product.rating || 'Not rated';
+          formattedProduct.faceValue = product.face_value ? 
+            `₹${product.face_value.toLocaleString('en-IN')}` : 'Not specified';
+          formattedProduct.interestPayment = product.interest_payment || 'Not specified';
+          formattedProduct.issuer = product.manufacturer_id?.manufacturer_name || 'Unknown Issuer';
+          formattedProduct.issueSize = product.issue_size || 'Not specified';
+          formattedProduct.listed = product.listed ? 'Yes' : 'No';
+          break;
+          
         case 'pms':
           // Format PMS data based on the exact structure provided
           formattedProduct.name = product.scheme_name || 'Unknown PMS';
@@ -415,9 +514,193 @@ function formatProductData(rawProducts, productType) {
   }
 }
 
+/**
+ * Fetch debt papers
+ * @param {string} returns - Return period (e.g., '1 Month', '3 Months', '1 Year')
+ * @returns {Promise<Array>} Array of debt paper products
+ */
+async function fetchDebtPapers(returns = '1 Month') {
+  try {
+    console.log('Fetching debt papers...');
+    const debtPaperProducts = await fetchProductsByCode(API_CONFIG.productCodes.DEBT_PAPERS, returns);
+    
+    if (debtPaperProducts && debtPaperProducts.length > 0) {
+      // Format the data if needed
+      return formatProductData(debtPaperProducts, 'debtPapers');
+    } else {
+      console.log('No debt paper products found or API failed. Using mock data.');
+      return getMockProductData(API_CONFIG.productCodes.DEBT_PAPERS);
+    }
+  } catch (error) {
+    console.error('Error fetching debt papers:', error.message);
+    return getMockProductData(API_CONFIG.productCodes.DEBT_PAPERS);
+  }
+}
+
+/**
+ * Fetch listed stocks from the mutual fund API
+ * @param {Object} options - Options for filtering stocks
+ * @param {number} options.pageNumber - Page number for pagination (default: 1)
+ * @param {number} options.pageSize - Number of items per page (default: 20)
+ * @param {string} options.category - Filter by category (e.g., 'Small-Cap', 'Large-Cap')
+ * @param {number} options.returnInYr - Return period in years (default: 5)
+ * @param {number} retryCount - Current retry attempt (used internally)
+ * @returns {Promise<Array>} Array of listed stocks
+ */
+async function fetchListedStocks(options = {}, retryCount = 0) {
+  try {
+    console.log(`Fetching listed stocks${retryCount > 0 ? ` (Retry attempt: ${retryCount})` : ''}`);
+    
+    // Default options
+    const defaultOptions = {
+      pageNumber: 1,
+      pageSize: 20,
+      category: '',
+      returnInYr: 5
+    };
+    
+    // Merge default options with provided options
+    const mergedOptions = { ...defaultOptions, ...options };
+    
+    // Request payload
+    const payload = {
+      amcCode: [],
+      category: mergedOptions.category,
+      rating: '',
+      divReInvstFlag: '',
+      pageNumber: mergedOptions.pageNumber,
+      pageSize: mergedOptions.pageSize,
+      returnInYr: mergedOptions.returnInYr,
+      schemeName: '',
+      schemeType: [],
+      sipMinInvestment: '',
+      sortOrder: 0
+    };
+    
+    // Request headers
+    const headers = {
+      'accept': '*/*',
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${LISTED_STOCKS_API_CONFIG.apiKey}`
+    };
+    
+    // Make API request with timeout
+    const response = await axios.post(LISTED_STOCKS_API_CONFIG.baseUrl, payload, { 
+      headers,
+      timeout: LISTED_STOCKS_API_CONFIG.timeout
+    });
+    
+    // Check if response is valid
+    if (response.status === 200 && response.data && response.data.responseCode === 200) {
+      if (response.data.data && response.data.data.schemeList && Array.isArray(response.data.data.schemeList)) {
+        console.log(`Successfully fetched ${response.data.data.schemeList.length} listed stocks`);
+        console.log(`Total available: ${response.data.data.totalCount || 'unknown'}`);
+        return response.data.data.schemeList;
+      } else {
+        console.error('Invalid response format from listed stocks API');
+        return [];
+      }
+    } else {
+      console.error(`Error fetching listed stocks: Unexpected response`, response.status);
+      return [];
+    }
+  } catch (error) {
+    console.error(`Error fetching listed stocks:`, error.message);
+    console.error('Error details:', error.response?.data || 'No response data');
+    
+    // Implement retry logic
+    if (retryCount < LISTED_STOCKS_API_CONFIG.retries) {
+      console.log(`Retrying request for listed stocks in ${LISTED_STOCKS_API_CONFIG.retryDelay}ms...`);
+      
+      // Wait before retrying
+      await new Promise(resolve => setTimeout(resolve, LISTED_STOCKS_API_CONFIG.retryDelay));
+      
+      // Retry the request
+      return fetchListedStocks(options, retryCount + 1);
+    }
+    
+    // If all retries failed or no retries configured, return empty array
+    console.error('All retry attempts failed. Returning empty data.');
+    return [];
+  }
+}
+
+/**
+ * Format listed stocks data into a standardized format
+ * @param {Array} rawStocks - Raw listed stocks data from API
+ * @returns {Array} Formatted listed stocks data
+ */
+function formatListedStocksData(rawStocks) {
+  try {
+    if (!Array.isArray(rawStocks) || rawStocks.length === 0) {
+      console.warn('No listed stocks data to format, returning empty array');
+      return [];
+    }
+    
+    // Format all listed stocks
+    return rawStocks.map(stock => {
+      // Map category to risk level
+      let risk = 'Moderate';
+      let expectedReturn = '10-12%';
+      
+      // Determine risk and expected return based on category
+      if (stock.DPCategoryName) {
+        if (stock.DPCategoryName.includes('Large-Cap')) {
+          risk = 'Moderate';
+          expectedReturn = '10-12%';
+        } else if (stock.DPCategoryName.includes('Mid-Cap')) {
+          risk = 'Moderate-High';
+          expectedReturn = '12-15%';
+        } else if (stock.DPCategoryName.includes('Small-Cap')) {
+          risk = 'High';
+          expectedReturn = '15-18%';
+        } else if (stock.DPCategoryName.includes('Multi-Cap') || stock.DPCategoryName.includes('Flexi-Cap')) {
+          risk = 'Moderate-High';
+          expectedReturn = '12-14%';
+        } else if (stock.DPCategoryName.includes('Liquid') || stock.DPCategoryName.includes('Money Market')) {
+          risk = 'Very Low';
+          expectedReturn = '5-7%';
+        } else if (stock.DPCategoryName.includes('Debt')) {
+          risk = 'Low';
+          expectedReturn = '7-9%';
+        }
+      }
+      
+      // Use actual returns if available
+      if (stock.OneYrReturn) {
+        expectedReturn = `${Math.round(stock.OneYrReturn)}%`;
+      }
+      
+      return {
+        name: stock.SchemeName || 'Unknown Stock',
+        description: `${stock.SchemeType || 'Equity'} fund in ${stock.DPCategoryName || 'Unknown'} category`,
+        expectedReturn: expectedReturn,
+        risk: risk,
+        category: stock.DPCategoryName || 'Unknown',
+        minInvestment: 5000, // Default minimum investment
+        dataSource: 'Listed Stocks API',
+        isin: stock.ISIN,
+        nav: stock.NAV,
+        navDate: stock.NAVDate,
+        oneYearReturn: stock.OneYrReturn,
+        threeYearReturn: stock.ThreeYrReturn,
+        rating: stock.MRRatingOverall,
+        fundSize: stock.FundSize,
+        schemeType: stock.SchemeType
+      };
+    });
+  } catch (error) {
+    console.error('Error formatting listed stocks data:', error);
+    return [];
+  }
+}
+
 module.exports = {
   fetchUnlistedStocks,
   fetchAlternativeFunds,
   fetchPMS,
-  formatProductData
+  fetchDebtPapers,
+  formatProductData,
+  fetchListedStocks,
+  formatListedStocksData
 };

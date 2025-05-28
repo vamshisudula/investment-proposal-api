@@ -6,6 +6,7 @@
  */
 
 const axios = require('axios');
+require('dotenv').config();
 
 // Import external products module
 const externalProducts = require('./externalProducts');
@@ -364,69 +365,116 @@ async function generateEquityRecommendations(riskLevel, assetAllocation, portfol
       }
     }
     
-    // Listed Stocks (based on stock categories)
+    // Listed Stocks (fetch from API)
     if (productTypeAllocation.listedStocks > 0) {
       const listedStocksAmount = (equityAmount * productTypeAllocation.listedStocks) / 100;
       
-      // Fetch Stock Categories from API
       try {
-        console.log('Fetching Stock Categories from API...');
-        const stockCategoriesData = await stockCategories.fetchStockCategories();
-        const formattedStockCategories = stockCategories.formatStockCategories(stockCategoriesData);
+        console.log('Fetching Listed Stocks from API...');
         
-        if (formattedStockCategories.length > 0) {
-          // Create stock category products based on fetched stock categories
-          const stockCategoryProducts = formattedStockCategories.map(category => ({
-            name: `${category.name} Stock`,
-            description: `Listed equity in ${category.name} category`,
-            expectedReturn: category.code === 'LACAP' ? '10-12%' : 
-                          category.code === 'MIDCAP' ? '12-15%' : 
-                          category.code === 'SMCAP' ? '15-18%' : '18-22%',
-            risk: category.code === 'LACAP' ? 'Moderate' : 
-                 category.code === 'MIDCAP' ? 'Moderate-High' : 
-                 category.code === 'SMCAP' ? 'High' : 'Very High',
-            category: category.name
-          }));
+        // Fetch listed stocks from the API with different categories based on risk level
+        let categoryFilter = '';
+        let pageSize = 10;
+        
+        switch(riskLevel) {
+          case 'conservative':
+            categoryFilter = 'Large-Cap';
+            break;
+          case 'moderate':
+            categoryFilter = 'Multi-Cap';
+            break;
+          case 'aggressive':
+            categoryFilter = 'Small-Cap';
+            break;
+          default:
+            categoryFilter = '';
+        }
+        
+        // Fetch listed stocks from API
+        const listedStocksData = await externalProducts.fetchListedStocks({
+          category: categoryFilter,
+          pageSize: pageSize,
+          returnInYr: 5
+        });
+        
+        if (listedStocksData && listedStocksData.length > 0) {
+          // Format the listed stocks data
+          const formattedListedStocks = externalProducts.formatListedStocksData(listedStocksData);
           
-          recommendations.listedStocks = {
-            allocation: productTypeAllocation.listedStocks || 10, // Default 10% if not specified
-            amount: listedStocksAmount,
-            products: stockCategoryProducts
-          };
-          
-          console.log(`Created ${stockCategoryProducts.length} Listed Stocks products from stock categories`);
-        } else {
-          console.warn('No Stock Categories returned from API');
           recommendations.listedStocks = {
             allocation: productTypeAllocation.listedStocks || 10,
             amount: listedStocksAmount,
-            products: [
-              { 
-                name: "Large Cap Stock", 
-                description: "Listed equity in large cap category",
-                expectedReturn: "10-12%",
-                risk: "Moderate",
-                category: "Large Cap"
-              },
-              { 
-                name: "Mid Cap Stock", 
-                description: "Listed equity in mid cap category",
-                expectedReturn: "12-15%",
-                risk: "Moderate-High",
-                category: "Mid Cap"
-              },
-              { 
-                name: "Small Cap Stock", 
-                description: "Listed equity in small cap category",
-                expectedReturn: "15-18%",
-                risk: "High",
-                category: "Small Cap"
-              }
-            ]
+            products: formattedListedStocks,
+            dataSource: 'Listed Stocks API'
           };
+          
+          console.log(`Successfully fetched and formatted ${formattedListedStocks.length} listed stocks from API`);
+        } else {
+          console.warn('No Listed Stocks data returned from API, falling back to stock categories');
+          
+          // Fall back to stock categories if no listed stocks data
+          const stockCategoriesData = await stockCategories.fetchStockCategories();
+          const formattedStockCategories = stockCategories.formatStockCategories(stockCategoriesData);
+          
+          if (formattedStockCategories.length > 0) {
+            // Create stock category products based on fetched stock categories
+            const stockCategoryProducts = formattedStockCategories.map(category => ({
+              name: `${category.name} Stock`,
+              description: `Listed equity in ${category.name} category`,
+              expectedReturn: category.code === 'LACAP' ? '10-12%' : 
+                            category.code === 'MIDCAP' ? '12-15%' : 
+                            category.code === 'SMCAP' ? '15-18%' : '18-22%',
+              risk: category.code === 'LACAP' ? 'Moderate' : 
+                   category.code === 'MIDCAP' ? 'Moderate-High' : 
+                   category.code === 'SMCAP' ? 'High' : 'Very High',
+              category: category.name,
+              dataSource: 'Stock Categories API'
+            }));
+            
+            recommendations.listedStocks = {
+              allocation: productTypeAllocation.listedStocks || 10,
+              amount: listedStocksAmount,
+              products: stockCategoryProducts
+            };
+            
+            console.log(`Created ${stockCategoryProducts.length} Listed Stocks products from stock categories as fallback`);
+          } else {
+            // Last resort fallback to hardcoded data
+            console.warn('No Stock Categories returned from API, using hardcoded fallback data');
+            recommendations.listedStocks = {
+              allocation: productTypeAllocation.listedStocks || 10,
+              amount: listedStocksAmount,
+              products: [
+                { 
+                  name: "Large Cap Stock", 
+                  description: "Listed equity in large cap category",
+                  expectedReturn: "10-12%",
+                  risk: "Moderate",
+                  category: "Large Cap",
+                  dataSource: "Fallback Data"
+                },
+                { 
+                  name: "Mid Cap Stock", 
+                  description: "Listed equity in mid cap category",
+                  expectedReturn: "12-15%",
+                  risk: "Moderate-High",
+                  category: "Mid Cap",
+                  dataSource: "Fallback Data"
+                },
+                { 
+                  name: "Small Cap Stock", 
+                  description: "Listed equity in small cap category",
+                  expectedReturn: "15-18%",
+                  risk: "High",
+                  category: "Small Cap",
+                  dataSource: "Fallback Data"
+                }
+              ]
+            };
+          }
         }
       } catch (error) {
-        console.error('Error fetching Stock Categories:', error);
+        console.error('Error fetching Listed Stocks:', error);
         recommendations.listedStocks = {
           allocation: productTypeAllocation.listedStocks || 10,
           amount: listedStocksAmount,
@@ -436,21 +484,24 @@ async function generateEquityRecommendations(riskLevel, assetAllocation, portfol
               description: "Listed equity in large cap category",
               expectedReturn: "10-12%",
               risk: "Moderate",
-              category: "Large Cap"
+              category: "Large Cap",
+              dataSource: "Fallback Data"
             },
             { 
               name: "Mid Cap Stock", 
               description: "Listed equity in mid cap category",
               expectedReturn: "12-15%",
               risk: "Moderate-High",
-              category: "Mid Cap"
+              category: "Mid Cap",
+              dataSource: "Fallback Data"
             },
             { 
               name: "Small Cap Stock", 
               description: "Listed equity in small cap category",
               expectedReturn: "15-18%",
               risk: "High",
-              category: "Small Cap"
+              category: "Small Cap",
+              dataSource: "Fallback Data"
             }
           ]
         };
@@ -745,10 +796,10 @@ async function generateDebtRecommendations(riskLevel, assetAllocation, portfolio
 async function fetchMutualFundsBasedOnRisk(riskLevel) {
   try {
     // Define API endpoint and headers
-    const url = 'https://i4edevmfnodeapis.azurewebsites.net/api/master-data/regular-scheme-list';
+    const url = process.env.MUTUAL_FUNDS_API_URL || 'https://i4edevmfnodeapis.azurewebsites.net/api/master-data/regular-scheme-list';
     const headers = {
       'accept': '*/*',
-      'Authorization': 'APIKEY-STRFQUJDRDEyMw==',
+      'Authorization': process.env.MUTUAL_FUNDS_API_KEY || 'APIKEY-STRFQUJDRDEyMw==',
       'Content-Type': 'application/json'
     };
     
@@ -794,19 +845,12 @@ async function fetchMutualFundsBasedOnRisk(riskLevel) {
     
     // Check if response is valid
     if (response.status === 200 && response.data && Array.isArray(response.data.data)) {
-      // Map API response to our product format
+      // Map API response to the desired format
       return response.data.data.map(fund => ({
-        name: fund.SchemeName || 'Mutual Fund',
-        description: `${fund.CategoryName || 'Debt'} fund by ${fund.AMCName || 'AMC'}`,
-        expectedReturn: fund['5YrReturn'] ? `${fund['5YrReturn']}%` : '7-9%',
-        risk: mapRatingToRiskLevel(fund.Rating),
-        lockInPeriod: 'None',
-        amcCode: fund.AMCCode,
-        schemeCode: fund.SchemeCode,
-        nav: fund.NAV,
-        rating: fund.Rating,
-        category: fund.CategoryName,
-        schemeType: fund.SchemeType
+        SchemeName: fund.SchemeName,
+        CategoryName: fund.CategoryName,
+        SchemeType: fund.SchemeType,
+        Rating: fund.Rating
       }));
     } else {
       console.warn('Invalid response from mutual fund API, using fallback data');
@@ -826,10 +870,10 @@ async function fetchMutualFundsBasedOnRisk(riskLevel) {
 async function fetchMutualFundsFromBasket(basketName) {
   try {
     // Define API endpoint and headers
-    const url = 'https://devie4nodeapis.azurewebsites.net/api/common/basketDetails/';
+    const url = process.env.BASKET_API_URL || 'https://devie4nodeapis.azurewebsites.net/api/common/basketDetails/';
     const headers = {
       'accept': 'application/json',
-      'Authorization': 'APIKEY-STRFQUJDRDEyMw=='
+      'Authorization': process.env.BASKET_API_KEY || 'APIKEY-STRFQUJDRDEyMw=='
     };
     
     console.log(`Fetching mutual funds from basket: ${basketName}`);
